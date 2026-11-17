@@ -10,3 +10,11 @@
 .board button.cell.selectable{border-color:#4ea6d9;cursor:pointer}
 
 .intel-feed{max-height:150px;overflow-y:auto;background:#081d2b;border:1px solid #3b6275;border-radius:7px;padding:7px;margin-bottom:12px;font-size:12px;line-height:1.45}.intel-item{padding:5px 2px;border-bottom:1px solid #29455f;color:#b7e9d6}.intel-item:last-child{border-bottom:0}
+
+/* High-contrast status indicators, shared by player and GM boards. */
+.board .cell.island,.board button.cell.island:disabled{background:#668a45;color:#efffc7;border-color:#91ae60}
+.board .cell.ship,.board button.cell.ship:disabled{background:#2879a4;color:#f2faff;border-color:#56b5e0}
+.board .cell.hit,.board button.cell.hit:disabled{background:#d32f45;color:#fff;border-color:#ff7382;font-weight:900;font-size:clamp(12px,1.3vw,21px)}
+.board .cell.own-hit,.board button.cell.own-hit:disabled{background:#d94d95;color:#fff;border-color:#ff9ac6;font-weight:900;font-size:clamp(12px,1.3vw,21px)}
+.board .cell.miss,.board button.cell.miss:disabled{background:#d6b65c;color:#392e13;border-color:#f1d994;font-weight:900;font-size:clamp(12px,1.3vw,21px)}
+.board .cell.sunk,.board button.cell.sunk:disabled{background:#922033;color:#fff;border-color:#ff6c7d}
