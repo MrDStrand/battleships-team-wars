@@ -8,3 +8,5 @@
 .board button.cell.island:disabled{opacity:1;background:#697d52;color:#dbe9a6}
 .board button.cell.ship:disabled{opacity:1;background:#2e799a}
 .board button.cell.selectable{border-color:#4ea6d9;cursor:pointer}
+
+.intel-feed{max-height:150px;overflow-y:auto;background:#081d2b;border:1px solid #3b6275;border-radius:7px;padding:7px;margin-bottom:12px;font-size:12px;line-height:1.45}.intel-item{padding:5px 2px;border-bottom:1px solid #29455f;color:#b7e9d6}.intel-item:last-child{border-bottom:0}
