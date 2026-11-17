@@ -2,3 +2,9 @@
 .chat-form{display:flex;gap:5px;margin-top:7px}.chat-form input{flex:1;min-width:0;width:0;padding:8px;font-size:12px}.chat-form button{padding:8px 10px;font-size:12px}#chat-messages{height:180px;overflow-y:auto;border:1px solid #29455f;border-radius:7px;background:#0a1b2d;padding:7px;font-size:12px;line-height:1.5;overflow-wrap:anywhere}.chat-message{margin-bottom:5px}.chat-message strong{color:#89d6ff}#chat-error{font-size:11px;margin:3px 0;color:#ffc8a5;min-height:1em}
 
 .board{grid-template-columns:repeat(var(--grid-size,12),minmax(0,1fr));gap:1px;max-width:640px}.cell{border-radius:2px;font-size:clamp(5px,.53vw,9px);border-width:1px}.cell.island{background:#697d52;color:#dbe9a6;cursor:not-allowed}.cell .count{min-width:12px;height:12px;font-size:9px;right:0;bottom:0}.cell.voted{outline-width:2px}@media(max-width:850px){.cell{font-size:7px}}@media(max-width:520px){.cell{font-size:8px}}
+
+/* Grid squares must remain fully visible even when voting is unavailable. */
+.board button.cell:disabled{opacity:1;cursor:default}
+.board button.cell.island:disabled{opacity:1;background:#697d52;color:#dbe9a6}
+.board button.cell.ship:disabled{opacity:1;background:#2e799a}
+.board button.cell.selectable{border-color:#4ea6d9;cursor:pointer}
