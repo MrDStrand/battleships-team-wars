@@ -18,3 +18,6 @@
 .board .cell.own-hit,.board button.cell.own-hit:disabled{background:#d94d95;color:#fff;border-color:#ff9ac6;font-weight:900;font-size:clamp(12px,1.3vw,21px)}
 .board .cell.miss,.board button.cell.miss:disabled{background:#d6b65c;color:#392e13;border-color:#f1d994;font-weight:900;font-size:clamp(12px,1.3vw,21px)}
 .board .cell.sunk,.board button.cell.sunk:disabled{background:#922033;color:#fff;border-color:#ff6c7d}
+
+/* Own fleet damage: override any legacy ship or disabled-button background. */
+#own.board .cell.own-hit,#own.board button.cell.own-hit:disabled,#own.board button.cell.ship.own-hit:disabled{background-color:#f044a0!important;background-image:none!important;color:#fff!important;border:2px solid #ffb3d9!important;opacity:1!important;box-shadow:inset 0 0 0 1px #ff7ab9}
