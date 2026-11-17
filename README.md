@@ -1,6 +1,6 @@
 # Battleships — Team Wars
 
-Multiplayer 10x10 Battleships with five ships per team, simultaneous majority-vote placement and 60-second majority-vote attacks.
+Multiplayer 10x10 Battleships with five ships per team, simultaneous majority-vote placement and untimed majority-vote attacks. Live anonymous vote counts are displayed on the grid.
 
 ## Deploy
 
