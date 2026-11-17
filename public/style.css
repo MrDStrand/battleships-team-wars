@@ -24,3 +24,5 @@
 
 /* Misses must be unmistakably yellow on either player grid. */
 #own.board button.cell.miss,#enemy.board button.cell.miss,#own.board button.cell.miss:disabled,#enemy.board button.cell.miss:disabled,#own.board button.cell.ship.miss:disabled,#enemy.board button.cell.ship.miss:disabled{background:#e4c56b!important;background-image:none!important;color:#35290c!important;border:2px solid #f5df99!important;opacity:1!important;font-weight:900;box-shadow:inset 0 0 0 1px #f4d981}
+
+.teammate-roster{display:flex;flex-wrap:wrap;gap:5px;margin:5px 0 12px;max-height:100px;overflow-y:auto}.teammate{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;border:1px solid #36516b;border-radius:14px;background:#102f48;font-size:12px;max-width:100%;overflow-wrap:anywhere}.teammate.offline{color:#91a2b1;background:#152739}.presence-dot{display:inline-block;flex:0 0 7px;width:7px;height:7px;border-radius:50%;background:#39d98a}.teammate.offline .presence-dot{background:#8c97a5}
