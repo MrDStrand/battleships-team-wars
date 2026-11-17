@@ -1,7 +1,7 @@
 const express=require('express'),http=require('http'),crypto=require('crypto'),{Server}=require('socket.io');
 const app=express(),server=http.createServer(app),io=new Server(server),KEY=process.env.HOST_KEY;
 if(!KEY)throw Error('HOST_KEY required');app.use(express.static('public'));
-const SIZE=20,ISLANDS=6;
+const SIZE=12,ISLANDS=4;
 const makeIslands=()=>{const land=new Set();for(let i=0;i<ISLANDS;i++){let r=crypto.randomInt(2,SIZE-2),c=crypto.randomInt(2,SIZE-2),length=crypto.randomInt(3,7),vertical=crypto.randomInt(2)===0;for(let j=0;j<length;j++){let y=r+(vertical?j:0),x=c+(vertical?0:j);if(y<SIZE-1&&x<SIZE-1)land.add(y+','+x)}}return [...land]};
 const FLEET=[['Carrier',5],['Battleship',4],['Cruiser',3],['Submarine',3],['Destroyer',2]],T=['Blue','Red'];
 const fresh=()=>({ships:[],shots:[],islands:[],votes:{},eligible:[],index:0,stage:'cell',selected:null});
