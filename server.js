@@ -7,7 +7,7 @@ let g={phase:'lobby',teams:{Blue:fresh(),Red:fresh()},players:new Map(),hosts:ne
 const other=t=>t==='Blue'?'Red':'Blue',members=t=>[...g.players.values()].filter(p=>p.team===t),active=t=>members(t).filter(p=>p.sid),need=t=>Math.floor(g.teams[t].eligible.length/2)+1;
 const cells=(start,dir,n)=>{let [r,c]=start.split(',').map(Number),[dr,dc]=({up:[-1,0],down:[1,0],left:[0,-1],right:[0,1]})[dir]||[99,99],out=[];for(let i=0;i<n;i++){let y=r+i*dr,x=c+i*dc;if(y<0||x<0||y>=10||x>=10)return null;out.push(y+','+x)}return out};
 const placed=t=>g.teams[t].ships.flatMap(s=>s.cells);
-const valid=(t,c,d)=>{let x=cells(c,d,FLEET[g.teams[t].index][1]);return x&&!x.some(v=>placed(t).includes(v))};
+const valid=(t,c,d)=>{let x=cells(c,d,FLEET[g.teams[t].index][1]);if(!x)return false;const occupied=new Set(placed(t));return x.every(cell=>{const [r,col]=cell.split(',').map(Number);return !occupied.has(cell)&&![[r-1,col],[r+1,col],[r,col-1],[r,col+1]].some(([y,z])=>occupied.has(y+','+z));});};
 const opts=t=>{let a=g.teams[t];if(g.phase==='placement'&&a.stage==='direction')return ['up','down','left','right'].filter(d=>valid(t,a.selected,d));let all=Array.from({length:100},(_,i)=>Math.floor(i/10)+','+(i%10));return g.phase==='placement'?all.filter(c=>['up','down','left','right'].some(d=>valid(t,c,d))):all.filter(c=>!a.shots.includes(c))};
 const tally=t=>{let o={};for(let v of Object.values(g.teams[t].votes))o[v]=(o[v]||0)+1;return o};
 const reset=t=>{g.teams[t].votes={};g.teams[t].eligible=active(t).map(p=>p.id)};
