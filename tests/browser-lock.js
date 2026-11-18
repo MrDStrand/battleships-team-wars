@@ -54,7 +54,7 @@ async function main(){
   await blue1.locator('#enemy button.cell[data-cell="0,0"]').click();
   await blue1.locator('#enemy button.cell[data-cell="0,0"].voted').waitFor({timeout:8000});
   await blue2.locator('#enemy button.cell[data-cell="0,0"]').click();
-  await blue1.locator('#enemy button.cell[data-cell="0,0"].miss').waitFor({timeout:8000});
+  await blue1.locator('#enemy button.cell[data-cell="0,0"].hit, #enemy button.cell[data-cell="0,0"].miss').first().waitFor({timeout:8000});
   console.log('PASS Chromium: ordinary clicks still cast attack votes and resolve a majority');
  }catch(e){
   if(pages[0])try{await pages[0].screenshot({path:path.join(__dirname,'browser-lock-failure.png'),fullPage:true})}catch{}
