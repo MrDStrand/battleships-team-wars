@@ -61,3 +61,37 @@
 /* Controls sit under Enemy Waters: no top offset that can change the grid alignment. */
 .enemy-tools{margin:9px 0 3px}
 #enemy.board.is-lock-mode .cell.lock-target:not(.locked-square).voted{outline:none!important;box-shadow:none!important}
+
+/* Two-position Vote / Lock switch beneath the enemy grid. */
+.enemy-tools .mode-switch{
+ position:relative;display:inline-grid;grid-template-columns:1fr 1fr;
+ align-items:center;width:154px;min-width:154px;height:36px;
+ padding:3px;border:1px solid #506b80;border-radius:20px;
+ background:#071827;color:#bed0df;cursor:pointer;
+ isolation:isolate;flex-shrink:0;box-shadow:none;
+}
+.enemy-tools .mode-switch .switch-choice{
+ position:relative;z-index:2;display:grid;place-items:center;
+ font-size:12px;font-weight:800;letter-spacing:.5px;
+ height:100%;pointer-events:none;transition:color .15s ease;
+}
+.enemy-tools .mode-switch .switch-thumb{
+ position:absolute;z-index:1;left:3px;top:3px;bottom:3px;
+ width:calc((100% - 6px)/2);border-radius:18px;
+ background:#1789c9;transition:transform .18s ease,background .18s ease;
+ pointer-events:none;
+}
+.enemy-tools .mode-switch[aria-checked="false"] .switch-vote,
+.enemy-tools .mode-switch[aria-checked="true"] .switch-lock{color:#fff}
+.enemy-tools .mode-switch[aria-checked="true"] .switch-vote,
+.enemy-tools .mode-switch[aria-checked="false"] .switch-lock{color:#a8bed0}
+.enemy-tools .mode-switch[aria-checked="true"] .switch-thumb{
+ transform:translateX(100%);background:#667687;
+}
+.enemy-tools .mode-switch[aria-checked="true"],
+.enemy-tools .mode-switch[aria-checked="false"]{
+ border:1px solid #506b80!important;background:#071827!important;
+ box-shadow:none!important;
+}
+.enemy-tools .mode-switch:focus-visible{outline:2px solid #fff;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.enemy-tools .mode-switch .switch-thumb{transition:none}}
