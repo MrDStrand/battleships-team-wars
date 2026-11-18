@@ -42,7 +42,8 @@ async function main(){
   // Blue attacks first: Red must be able to lock, without being allowed to vote.
   assert.match(await red1.locator('#turn').innerText(),/Blue attacking/);
   await red1.locator('#lock-mode').click();
-  assert.equal(await red1.locator('#lock-mode').getAttribute('aria-pressed'),'true');
+  assert.equal(await red1.locator('#lock-mode').getAttribute('aria-checked'),'true');
+  assert.equal(await red1.locator('#lock-mode').getAttribute('role'),'switch');
   await red1.locator('#enemy button.cell[data-cell="0,0"]').click();
   await red1.locator('#enemy button.cell[data-cell="0,0"].locked-square').waitFor({timeout:8000});
   await red2.locator('#enemy button.cell[data-cell="0,0"].locked-square').waitFor({timeout:8000});
