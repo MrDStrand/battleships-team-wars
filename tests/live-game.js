@@ -128,6 +128,15 @@ async function run(){
  await ok(blue[1],'target:lock',lockTarget);
  await wait(()=>blue[0].state.board.options.includes(lockTarget),'relock released');
  pass('Repeated lock and unlock preserves vote availability');
+ const pending=blue[0].state.board.options[0];
+ await ok(blue[0],'vote',pending);
+ await wait(()=>blue[1].state.board.votes[pending]===1,'first vote visible');
+ await ok(blue[1],'target:lock',pending);
+ await wait(()=>!blue[0].state.board.votes[pending]&&blue[0].state.board.myVote===null,'lock cancels outstanding vote');
+ assert(!host.state.admin.Blue.shots.includes(pending),'Lock unexpectedly fired an attack');
+ await ok(blue[0],'target:lock',pending);
+ await wait(()=>blue[1].state.board.options.includes(pending),'unlock restores voting option');
+ pass('Locking a pending vote cancels it without firing');
  const redCells=new Set(host.state.admin.Red.ships.flatMap(s=>s.cells));
  const blueCells=new Set(host.state.admin.Blue.ships.flatMap(s=>s.cells));
  await wait(()=>blue[0].state?.turn==='Blue'&&blue[0].state?.phase==='battle','Blue turn');
