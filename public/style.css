@@ -34,3 +34,19 @@
 
 /* Compact GM player controls */
 .gm-roster-actions{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px}.gm-roster-actions button{padding:5px 7px;font-size:11px}.gm-player-row{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:3px 0;border-bottom:1px solid #29455f;font-size:12px}.gm-player-row span{overflow-wrap:anywhere;min-width:0}.gm-kick{padding:3px 7px;font-size:11px;background:#a63a4a;flex-shrink:0}.gm-kick:hover{background:#ca4b5d}
+
+/* Team target locks: grey tile and unmistakable padlock, never a voting option. */
+.enemy-tools{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:-4px 0 7px}
+.enemy-tools button{font-size:11px;padding:5px 7px;white-space:nowrap}
+.enemy-tools button[aria-pressed="true"]{background:#6a7585;border:1px solid #cbd1dc}
+#lock-status{font-size:11px;color:#b9cbd7;line-height:1.25;flex:1;min-width:110px}
+#enemy.board .cell.locked-square,#enemy.board button.cell.locked-square:disabled{background:#707983!important;color:#fff!important;border:2px solid #c2cad1!important;opacity:1!important;font-size:clamp(12px,1.2vw,20px)!important;cursor:context-menu}
+#enemy.board button.cell.locked-square.lockable{cursor:context-menu}
+#enemy.board button.cell.lockable:not(:disabled){touch-action:manipulation}
+
+/* A sunk ship becomes one visually connected solid crimson hull across all its cells. */
+#enemy.board .cell.sunk-ship,#enemy.board button.cell.sunk-ship:disabled{background:#911c33!important;background-image:none!important;color:#ffeff2!important;border:2px solid #ff4d6a!important;opacity:1!important;font-size:clamp(12px,1.3vw,20px)!important;font-weight:900;box-shadow:inset 0 0 0 1px #bd334c;z-index:1}
+#enemy.board .cell.sunk-ship.sunk-join-left{border-left-color:#911c33!important;border-top-left-radius:0;border-bottom-left-radius:0}
+#enemy.board .cell.sunk-ship.sunk-join-right{border-right-color:#911c33!important;border-top-right-radius:0;border-bottom-right-radius:0}
+#enemy.board .cell.sunk-ship.sunk-join-top{border-top-color:#911c33!important;border-top-left-radius:0;border-top-right-radius:0}
+#enemy.board .cell.sunk-ship.sunk-join-bottom{border-bottom-color:#911c33!important;border-bottom-left-radius:0;border-bottom-right-radius:0}
