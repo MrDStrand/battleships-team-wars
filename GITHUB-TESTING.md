@@ -1,27 +1,28 @@
-# Test Battleships using GitHub Actions
+# Test Battleships in GitHub Actions — isolated multiplayer
 
-Use the repository's manual **Test Battleships live game** workflow to run real Socket.IO integration tests against the Render deployment. No Mac setup is needed.
+The **Test Battleships (isolated multiplayer)** workflow launches a temporary Battleships server inside GitHub Actions using the current repository's code. It drives a four-player Socket.IO match against that isolated server.
 
-## Initial setup
+## Run the test
 
-1. Repository **Settings > Secrets and variables > Actions**.
-2. Create the secret `BATTLESHIPS_HOST_KEY` with the same value as the deployed Render `HOST_KEY`. Never enter that key in a workflow input or commit it.
+1. Open the GitHub repository **Actions** tab.
+2. Select **Test Battleships (isolated multiplayer)**.
+3. Click **Run workflow**, select `main`, and click the green **Run workflow** button.
+4. Open the run and inspect the **multiplayer-test** job.
+5. Download the `battleships-integration-test-report` artifact for the JSON report.
 
-## Run a test
+No Render restart, lobby reset, or GitHub secret is needed. The workflow generates a fresh, random, temporary GM key for its own local game instance. Never use that key outside the test.
 
-1. Make sure nobody is currently using the live game. Close all **player** game browser tabs, including your own, to prevent automatic reconnection.
-2. The game must be in the **lobby** phase. If a game is underway or finished, return it to the lobby through the Game Master **Reset game** control (only when it is safe to discard that game). Do **not** restart Render just because disconnected player registrations remain.
-3. Open **Actions > Test Battleships live game > Run workflow**.
-4. Select `main`, type `RESET` as `confirm_live_reset`, and press the green **Run workflow** button.
-5. View the `multiplayer-test` job. Download the `battleships-live-test-report` artifact if you want detailed JSON results.
+## What it verifies
 
-## Safety and cleanup
+- GM authentication and restricted controls
+- Four player connections, team balancing and chat isolation
+- Random island and ship generation
+- Majority-voted attacks, hits/misses, and latest incoming attack markers
+- Pause/resume, disconnect/reconnect and eventual victory
+- JavaScript syntax and dependency installation
 
-- The workflow refuses to run against any phase other than **lobby**.
-- The runner checks that **zero player sockets are connected**. If any are connected, it fails without resetting or removing them; close player tabs and try again.
-- With GM authentication, the runner calls `host:test-prepare`, a **test-only** server operation that clears disconnected registrations and resets an empty lobby. This operation also checks for active player connections and lobby phase on the server. It cannot run without GM authentication.
-- The workflow then joins four temporary players, checks random fleet placement, majority voting, privacy, chat, pause/resume, latest incoming attack markers, reconnection, hits/misses and a full game through victory.
-- A completed test leaves a **finished game**. Use Game Master **Reset game** to return to a lobby before another test. Disconnected temporary player registrations will be cleared safely during the next test preparation.
-- Actual visual browser testing remains separate from this Socket.IO integration run.
+## Important distinction
 
-**Important:** The workflow is destructive to an unused lobby, and manual `RESET` confirms that behavior. It does not interrupt a live game.
+This is a **multiplayer integration test of the repository code**, not a test of the public Render deployment. It does not alter or reset the live game and cannot be interfered with by browser tabs connected to Render. Manual checks of deployment availability and actual browser layout/colors remain necessary.
+
+The old `BATTLESHIPS_HOST_KEY` GitHub secret is **no longer required** by this isolated workflow. You may remove that repository secret if no other workflows depend on it. Keep the actual `HOST_KEY` in Render.
