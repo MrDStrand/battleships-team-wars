@@ -1,0 +1,44 @@
+name: Test Battleships live game
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_live_reset:
+        description: 'Type RESET to authorize a live game reset and full simulated match'
+        required: true
+        type: string
+      target_url:
+        description: 'Render game URL'
+        required: true
+        default: 'https://battleships-team-wars.onrender.com'
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: battleships-live-test
+  cancel-in-progress: false
+jobs:
+  multiplayer-test:
+    if: ${{ inputs.confirm_live_reset == 'RESET' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      BATTLESHIPS_HOST_KEY: ${{ secrets.BATTLESHIPS_HOST_KEY }}
+      CONFIRM_LIVE_RESET: ${{ inputs.confirm_live_reset }}
+      TARGET_URL: ${{ inputs.target_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install test dependencies
+        run: npm install --prefix tests --no-audit --no-fund
+      - name: Play test match on Render
+        run: node tests/live-game.js
+      - name: Upload JSON results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: battleships-live-test-report
+          path: tests/battleships-test-report.json
+          if-no-files-found: warn
+          retention-days: 14
