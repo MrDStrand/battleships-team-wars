@@ -1,7 +1,7 @@
 'use strict';
 const {io}=require('socket.io-client');
 const fs=require('node:fs'),path=require('node:path');
-const url=process.env.TARGET_URL||'https://battleships-team-wars.onrender.com';
+const url='https://battleships-team-wars.onrender.com';
 const key=process.env.BATTLESHIPS_HOST_KEY;
 const reportFile=path.join(__dirname,'battleships-test-report.json');
 const test=[],clients=[],started=Date.now();
