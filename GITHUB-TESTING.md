@@ -14,7 +14,7 @@ This workflow tests the **existing** Render deployment through Socket.IO. No sof
 1. Ensure no one is using the live game. This test resets the game and plays a full match.
 2. **Important:** The server keeps players registered even after a game reset. If a previous test ran or players have joined, restart the Render web service to clear in-memory players **before** testing.
 3. On GitHub open **Actions > Test Battleships live game > Run workflow**.
-4. Select the `main` branch, enter exactly `RESET` in `confirm_live_reset`, and leave the target URL unchanged.
+4. Select the `main` branch, enter exactly `RESET` in `confirm_live_reset`,.
 5. Click the green **Run workflow** button, open the new run, and follow the `multiplayer-test` job.
 6. The job logs show `PASS` and `FAIL`. After completion, scroll to **Artifacts**, download `battleships-live-test-report`, and upload its JSON file to ChatGPT for analysis.
 
