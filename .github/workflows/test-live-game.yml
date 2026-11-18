@@ -23,6 +23,9 @@ jobs:
         run: |
           npm run check
           node --check tests/live-game.js
+          node --check tests/browser-lock.js
+      - name: Install Chromium for real browser smoke test
+        run: ./tests/node_modules/.bin/playwright install --with-deps chromium
       - name: Run a complete isolated multiplayer match
         shell: bash
         run: |
@@ -51,12 +54,13 @@ jobs:
             cat "$RUNNER_TEMP/battleships-server.log"
             exit 1
           fi
+          node tests/browser-lock.js
           node tests/live-game.js
       - name: Upload JSON results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: battleships-integration-test-report
-          path: tests/battleships-test-report.json
+          path: |\n            tests/battleships-test-report.json\n            tests/browser-lock-failure.png
           if-no-files-found: warn
           retention-days: 14
