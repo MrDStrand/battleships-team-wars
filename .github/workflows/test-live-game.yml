@@ -61,6 +61,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: battleships-integration-test-report
-          path: |\n            tests/battleships-test-report.json\n            tests/browser-lock-failure.png
+          path: |
+            tests/battleships-test-report.json
+            tests/browser-lock-failure.png
           if-no-files-found: warn
           retention-days: 14
