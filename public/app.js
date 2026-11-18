@@ -8,7 +8,7 @@ function setLockMode(next){
  $('lock-mode').textContent=next?'🔒 LOCK MODE ON — click tiles to lock/unlock':'🎯 VOTE MODE — click tiles to vote';
  $('lock-mode').setAttribute('aria-pressed',String(next));
  $('enemy').classList.toggle('is-lock-mode',next);
- $('lock-status').textContent=next?'LOCK MODE: click any unshot water square, even between turns. Click the button again to vote.':'VOTE MODE: normal clicks vote on your turn. Use Lock mode to mark squares.';
+ $('lock-status').textContent=next?'LOCK MODE: pale-grey squares can be locked. Click a grey padlock to unlock. Switch back to vote.':'VOTE MODE: normal clicks vote on your turn. Use Lock mode to mark squares.';
  if(state?.me)render(state);
 }
 $('lock-mode').onclick=()=>setLockMode(!lockMode);
