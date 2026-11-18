@@ -1,38 +1,62 @@
-name: Test Battleships live game
+name: Test Battleships (isolated multiplayer)
 on:
   workflow_dispatch:
-    inputs:
-      confirm_live_reset:
-        description: 'Type RESET to authorize a live game reset and full simulated match'
-        required: true
-        type: string
 permissions:
   contents: read
 concurrency:
-  group: battleships-live-test
+  group: battleships-isolated-integration
   cancel-in-progress: false
 jobs:
   multiplayer-test:
-    if: ${{ inputs.confirm_live_reset == 'RESET' }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
-    env:
-      BATTLESHIPS_HOST_KEY: ${{ secrets.BATTLESHIPS_HOST_KEY }}
-      CONFIRM_LIVE_RESET: ${{ inputs.confirm_live_reset }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install test dependencies
-        run: npm install --prefix tests --no-audit --no-fund
-      - name: Play test match on Render
-        run: node tests/live-game.js
+      - name: Install game and test dependencies
+        run: |
+          npm install --no-audit --no-fund
+          npm install --prefix tests --no-audit --no-fund
+      - name: Check JavaScript syntax
+        run: |
+          npm run check
+          node --check tests/live-game.js
+      - name: Run a complete isolated multiplayer match
+        shell: bash
+        run: |
+          set -euo pipefail
+          export HOST_KEY="$(node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('hex'))")"
+          export BATTLESHIPS_HOST_KEY="$HOST_KEY"
+          export PORT=3100
+          node server.js > "$RUNNER_TEMP/battleships-server.log" 2>&1 &
+          GAME_PID=$!
+          trap 'kill "$GAME_PID" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 60); do
+            if curl -fsS --max-time 2 http://127.0.0.1:3100/ > /dev/null; then
+              ready=1
+              break
+            fi
+            if ! kill -0 "$GAME_PID" 2>/dev/null; then
+              echo 'Isolated game server terminated unexpectedly.'
+              cat "$RUNNER_TEMP/battleships-server.log"
+              exit 1
+            fi
+            sleep 1
+          done
+          if [ "$ready" != 1 ]; then
+            echo 'Isolated game server did not become ready.'
+            cat "$RUNNER_TEMP/battleships-server.log"
+            exit 1
+          fi
+          node tests/live-game.js
       - name: Upload JSON results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: battleships-live-test-report
+          name: battleships-integration-test-report
           path: tests/battleships-test-report.json
           if-no-files-found: warn
           retention-days: 14
