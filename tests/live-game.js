@@ -23,11 +23,15 @@ async function run(){
  phase='preflight';
  host=await connect('Game Master');await wait(()=>host.state,'initial state');
  let denied=await ack(host,'host:reset',null);assert(!denied.ok,'Unauthenticated reset was allowed');pass('GM-only reset enforced');
+ let prepareDenied=await ack(host,'host:test-prepare',null);assert(!prepareDenied.ok,'Unauthenticated test preparation was allowed');pass('Test preparation requires GM authentication');
  await ok(host,'host:auth',key);await wait(()=>host.state?.host&&host.state?.admin,'authenticated GM state');pass('GM authentication');
- const num=host.state.teams.Blue.players.length+host.state.teams.Red.players.length;
- assert(num===0,'Found '+num+' registered player(s); restart the Render service to clear old sessions before testing. No reset was performed.');
- assert(host.state.phase==='lobby','Game is '+host.state.phase+'; refusing to reset active game');
- await ok(host,'host:reset',null);pass('Safe live reset authorized');
+ assert(host.state.phase==='lobby','Game is '+host.state.phase+'; refusing to interrupt an active or finished game');
+ const roster=[...host.state.teams.Blue.players,...host.state.teams.Red.players];
+ const online=roster.filter(p=>p.online).length;
+ assert(online===0,online+' player(s) currently connected. Close any open player game tabs and rerun; no game was reset.');
+ const prepared=await ok(host,'host:test-prepare',null);
+ await wait(()=>host.state.teams.Blue.players.length+host.state.teams.Red.players.length===0,'lobby cleared');
+ pass('Safe test lobby preparation',String(prepared.removed||0)+' stale registered player(s) cleared');
  phase='joining';
  let all=[];
  for(let name of ['TestBlue1','TestRed1','TestBlue2','TestRed2']){let p=await connect(name);p.token=(await ok(p,'player:join',{name})).token;await wait(()=>p.state?.me,name+' joined');all.push(p)}
@@ -100,4 +104,4 @@ async function run(){
  assert(host.state.winner==='Blue','Unexpected winner '+host.state.winner);pass('Full game reaches Blue victory',String(attacks)+' attacks');
  assert(blue[0].state.intelligence.length>1,'Intelligence was not refreshed');pass('Intelligence refreshed during play');
 }
-(async()=>{try{await run()}catch(e){test.push({name:'Interrupted during '+phase,status:'FAIL',detail:String(e.message||e)});console.error('FAIL '+String(e.message||e));process.exitCode=1}finally{const result={target:url,date:new Date().toISOString(),phase:host?.state?.phase||phase,passed:test.filter(t=>t.status==='PASS').length,failed:test.filter(t=>t.status==='FAIL').length,attacks,duration_seconds:Math.round((Date.now()-started)/1000),tests:test,note:'Socket.IO multiplayer test only, not browser color or layout testing. Restart Render after a completed test to remove registered test players.'};fs.writeFileSync(reportFile,JSON.stringify(result,null,2));console.log('RESULT '+result.passed+' passed, '+result.failed+' failed');console.log('REPORT '+reportFile);clients.forEach(p=>p.sock.disconnect())}})();
+(async()=>{try{await run()}catch(e){test.push({name:'Interrupted during '+phase,status:'FAIL',detail:String(e.message||e)});console.error('FAIL '+String(e.message||e));process.exitCode=1}finally{const result={target:url,date:new Date().toISOString(),phase:host?.state?.phase||phase,passed:test.filter(t=>t.status==='PASS').length,failed:test.filter(t=>t.status==='FAIL').length,attacks,duration_seconds:Math.round((Date.now()-started)/1000),tests:test,note:'Socket.IO multiplayer test only, not browser color or layout testing. Rerun safely from an empty lobby after restarting or after clearing disconnected registrations through authenticated test preparation.'};fs.writeFileSync(reportFile,JSON.stringify(result,null,2));console.log('RESULT '+result.passed+' passed, '+result.failed+' failed');console.log('REPORT '+reportFile);clients.forEach(p=>p.sock.disconnect())}})();
