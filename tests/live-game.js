@@ -38,6 +38,7 @@ async function run(){
  const assignments=all.map(p=>p.name+'='+p.state.me.team);
  console.log('TEAM ASSIGNMENTS '+assignments.join(', '));
  blue=all.filter(p=>p.state.me.team==='Blue');red=all.filter(p=>p.state.me.team==='Red');
+ await wait(()=>host.state.teams.Blue.players.length+host.state.teams.Red.players.length>=4,'GM roster reaches four registered players');
  const joinedRoster=[...host.state.teams.Blue.players,...host.state.teams.Red.players];
  const expected=new Set(all.map(p=>p.name));
  assert(joinedRoster.length===4&&joinedRoster.every(p=>expected.has(p.name)),'Unexpected registered player(s) joined during test: '+joinedRoster.map(p=>p.name).join(', ')+'. Close all player tabs, return to lobby and retry.');
