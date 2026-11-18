@@ -14,7 +14,6 @@ function connect(name){return new Promise((resolve,reject)=>{let sock=io(url,{tr
 const ack=(p,event,value)=>new Promise((resolve,reject)=>p.sock.timeout(16000).emit(event,value,(err,result)=>err?reject(Error(p.name+' '+event+' timed out')):resolve(result||{})));
 async function ok(p,event,value){let r=await ack(p,event,value);assert(r.ok,p.name+' '+event+' refused: '+(r.error||'unknown'));return r}
 async function two(p,q,target,label){const snapshot=p.state;assert(snapshot?.board?.options?.includes(target),p.name+': '+target+' unavailable for '+label);await wait(()=>q.state?.phase===snapshot.phase&&q.state?.turn===snapshot.turn&&q.state?.board?.stage===snapshot.board.stage&&q.state.board.selected===snapshot.board.selected&&q.state.board.options.includes(target),q.name+' to receive '+label+' options ('+target+')');await ok(p,'vote',target);await ok(q,'vote',target)}
-async function fleet(team,pair){for(let n=0;n<5;n++){let p=pair[0];await wait(()=>p.state?.phase==='placement'&&p.state?.board?.stage==='cell'&&p.state.board.ship,team+' selecting ship');let cell=p.state.board.options[0];assert(cell,team+' has no valid ship starting square');await two(...pair,cell,team+' placement');await wait(()=>p.state?.board?.stage==='direction'&&p.state.board.selected===cell,team+' direction');let dir=p.state.board.options[0];assert(dir,team+' has no legal direction');await two(...pair,dir,team+' direction');await wait(()=>host.state?.admin?.[team]?.ships?.length===n+1,team+' ship '+(n+1))}pass(team+' placed 5 ships')}
 async function fire(pair,team,target){await wait(()=>pair[0].state?.phase==='battle'&&pair[0].state?.turn===team,team+' attack turn');await two(...pair,target,team+' attack');attacks++;await wait(()=>host.state?.admin?.[team]?.shots?.includes(target),team+' shot recorded at '+target)}
 function option(team,allowed){let p=team==='Blue'?blue[0]:red[0];return (p.state?.board?.options||[]).find(allowed)}
 async function run(){
@@ -39,11 +38,33 @@ async function run(){
  await wait(()=>blue[1].state?.chat?.some(x=>x.text==='Blue-only integration test'),'Blue private chat');
  assert(!red[0].state.chat.some(x=>x.text==='Blue-only integration test'),'Private chat leaked');pass('Team-private chat');
  assert(!(await ack(blue[0],'host:start',null)).ok,'Player could start the game');pass('Players denied GM controls');
- phase='placement';
- await ok(host,'host:start',null);await wait(()=>host.state?.phase==='placement','placement start');
+ phase='fleet generation';
+ await ok(host,'host:start',null);
+ await wait(()=>host.state?.phase==='battle','automatic fleet start');
  assert(['Blue','Red'].every(t=>host.state.admin[t].islands.length>0),'Missing team islands');pass('Islands generated');
- await fleet('Blue',blue);await fleet('Red',red);
- await wait(()=>host.state?.phase==='battle','battle start');pass('Both fleets placed, battle started');
+ for(const team of ['Blue','Red']){
+   const a=host.state.admin[team],occupied=new Set(),islands=new Set(a.islands);
+   assert(a.ships.length===5,team+' did not receive 5 ships');
+   for(const ship of a.ships){
+     assert(ship.cells.length===ship.length,team+' ship length invalid: '+ship.name);
+     const rows=ship.cells.map(x=>Number(x.split(',')[0])),cols=ship.cells.map(x=>Number(x.split(',')[1]));
+     assert(new Set(rows).size===1||new Set(cols).size===1,team+' ship not straight: '+ship.name);
+     for(const c of ship.cells){
+       const [y,x]=c.split(',').map(Number);
+       assert(y>=0&&y<12&&x>=0&&x<12,team+' out-of-bounds ship cell');
+       assert(!islands.has(c)&&!occupied.has(c),team+' ship overlaps land or another ship');
+       occupied.add(c);
+     }
+   }
+   for(let i=0;i<a.ships.length;i++)for(let j=i+1;j<a.ships.length;j++)for(const c of a.ships[i].cells){
+      const [y,x]=c.split(',').map(Number);
+      for(const d of a.ships[j].cells){const [dy,dx]=d.split(',').map(Number);assert(Math.abs(y-dy)+Math.abs(x-dx)!==1,team+' ships touch orthogonally')}
+   }
+   pass(team+' random fleet is legal (5 ships)');
+ }
+ assert(host.state.turn==='Blue','Blue must attack first');pass('Automatic battle start and Blue first');
+ assert(!blue[0].state.board.ships.some(x=>!x.cells?.length),'Blue should see its own ships');
+ assert(!blue[0].state.board.enemyShips,'Enemy ship data leaked');pass('Own ships visible and enemy ships hidden');
  await wait(()=>blue[0].state?.intelligence?.length&&red[0].state?.intelligence?.length,'initial intelligence');
  assert(!blue[0].state.admin&&!red[0].state.admin,'Player received GM-only data');pass('Team intelligence and secrecy');
  phase='battle';
@@ -55,17 +76,17 @@ async function run(){
  const blueCells=new Set(host.state.admin.Blue.ships.flatMap(s=>s.cells));
  await wait(()=>blue[0].state?.turn==='Blue'&&blue[0].state?.phase==='battle','Blue turn');
  let miss=option('Blue',c=>!redCells.has(c));assert(miss,'No legal Blue miss target');await fire(blue,'Blue',miss);
- await wait(()=>blue[0].state.board.attacks.includes(miss),'Blue miss state');assert(!blue[0].state.board.hitCells.includes(miss),'Miss reported as hit');pass('Miss recorded',miss);
+ await wait(()=>blue[0].state.board.attacks.includes(miss),'Blue miss state');assert(!blue[0].state.board.hitCells.includes(miss),'Miss reported as hit');await wait(()=>red[0].state.board.latestIncoming===miss,'Red latest incoming miss');pass('Miss recorded and latest incoming marker',miss);
  await wait(()=>red[0].state?.turn==='Red'&&red[0].state?.phase==='battle','Red turn');
  let hit=option('Red',c=>blueCells.has(c));assert(hit,'No legal Red hit target');await fire(red,'Red',hit);
  await wait(()=>blue[0].state?.board?.incoming?.includes(hit),'own fleet hit');
- assert(blue[0].state.board.ships.some(x=>x.hits.includes(hit)),'Own-ship hit not visible in player state');pass('Own-ship hit recorded',hit);
+ assert(blue[0].state.board.ships.some(x=>x.hits.includes(hit)),'Own-ship hit not visible in player state');assert(blue[0].state.board.latestIncoming===hit,'Latest attack marker missing on own-hit square');pass('Own-ship hit and latest marker recorded',hit);
  blue[1].sock.disconnect();await wait(()=>blue[0].state?.board?.needed===1,'Blue majority after disconnect');
  let solo=option('Blue',c=>redCells.has(c));assert(solo,'No legal solo attack');await ok(blue[0],'vote',solo);attacks++;await wait(()=>host.state.admin.Blue.shots.includes(solo),'solo-majority shot');pass('Disconnected teammate no longer blocks majority');
  let reconnect=await connect('Returning Blue');reconnect.token=blue[1].token;
  await ok(reconnect,'player:join',{name:'TestBlue2',token:reconnect.token});await wait(()=>reconnect.state?.me?.team==='Blue','Blue reconnect');blue[1]=reconnect;pass('Reconnect with existing identity');
  await wait(()=>red[0].state?.turn==='Red'&&red[0].state?.phase==='battle','Red follow-up');
- let redMiss=option('Red',c=>!blueCells.has(c));assert(redMiss,'No legal Red miss');await fire(red,'Red',redMiss);pass('Miss reported on own fleet',redMiss);
+ let redMiss=option('Red',c=>!blueCells.has(c));assert(redMiss,'No legal Red miss');await fire(red,'Red',redMiss);await wait(()=>blue[0].state.board.latestIncoming===redMiss,'Latest incoming marker moved');pass('Latest incoming marker moves on new enemy shot',redMiss);
  for(let target of [...redCells].filter(c=>!host.state.admin.Blue.shots.includes(c))){
    await wait(()=>blue[0].state?.phase==='battle'&&blue[0].state?.turn==='Blue','Blue next turn');
    assert(blue[0].state.board.options.includes(target),'Red ship cell '+target+' not available as a legal attack');
