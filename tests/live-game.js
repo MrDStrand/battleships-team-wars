@@ -23,15 +23,11 @@ async function run(){
  phase='preflight';
  host=await connect('Game Master');await wait(()=>host.state,'initial state');
  let denied=await ack(host,'host:reset',null);assert(!denied.ok,'Unauthenticated reset was allowed');pass('GM-only reset enforced');
- let prepareDenied=await ack(host,'host:test-prepare',null);assert(!prepareDenied.ok,'Unauthenticated test preparation was allowed');pass('Test preparation requires GM authentication');
  await ok(host,'host:auth',key);await wait(()=>host.state?.host&&host.state?.admin,'authenticated GM state');pass('GM authentication');
- assert(host.state.phase==='lobby','Game is '+host.state.phase+'; refusing to interrupt an active or finished game');
- const roster=[...host.state.teams.Blue.players,...host.state.teams.Red.players];
- const online=roster.filter(p=>p.online).length;
- assert(online===0,online+' player(s) currently connected. Close any open player game tabs and rerun; no game was reset.');
- const prepared=await ok(host,'host:test-prepare',null);
- await wait(()=>host.state.teams.Blue.players.length+host.state.teams.Red.players.length===0,'lobby cleared');
- pass('Safe test lobby preparation',String(prepared.removed||0)+' stale registered player(s) cleared');
+ assert(host.state.phase==='lobby','Isolated server did not start in lobby phase');
+ const players=host.state.teams.Blue.players.length+host.state.teams.Red.players.length;
+ assert(players===0,'Isolated server unexpectedly started with '+players+' players');
+ await ok(host,'host:reset',null);pass('Fresh isolated lobby ready');
  phase='joining';
  let all=[];
  for(let name of ['TestBlue1','TestRed1','TestBlue2','TestRed2']){let p=await connect(name);p.token=(await ok(p,'player:join',{name})).token;await wait(()=>p.state?.me,name+' joined');all.push(p)}
