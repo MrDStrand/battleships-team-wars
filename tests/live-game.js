@@ -88,7 +88,7 @@ async function run(){
      assert(new Set(rows).size===1||new Set(cols).size===1,team+' ship not straight: '+ship.name);
      for(const c of ship.cells){
        const [y,x]=c.split(',').map(Number);
-       assert(y>=0&&y<12&&x>=0&&x<12,team+' out-of-bounds ship cell');
+       assert(y>=0&&y<10&&x>=0&&x<10,team+' out-of-bounds ship cell');
        assert(!islands.has(c)&&!occupied.has(c),team+' ship overlaps land or another ship');
        occupied.add(c);
      }
@@ -109,6 +109,9 @@ async function run(){
  assert(!(await ack(blue[0],'vote','0,0')).ok,'Vote accepted while paused');
  await ok(host,'host:resume',null);await wait(()=>host.state?.phase==='battle','resume');
  pass('Pause, resume and paused-vote rejection');
+ assert(blue[0].state.board.size===10&&red[0].state.board.size===10,'Boards must be 10x10');
+ assert(blue[0].state.board.options.length<=100,'Too many board cells');
+ pass('Both teams have 10x10 grids');
  const lockTarget=blue[0].state.board.options[0];
  assert(lockTarget,'Missing Blue lock target');
  assert(!(await ack(blue[0],'target:lock','99,99')).ok,'Out-of-bounds target lock accepted');
