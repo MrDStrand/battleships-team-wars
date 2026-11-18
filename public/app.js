@@ -3,24 +3,44 @@ const socket=io(), $=id=>document.getElementById(id);let state=null,lockMode=fal
 const coord=(r,c)=>`${r},${c}`,label=(r,c)=>`${String.fromCharCode(65+r)}${c+1}`;
 function emit(event,data,cb){socket.emit(event,data,res=>{if(!res?.ok) $('error').textContent=res?.error||'Request failed';else cb?.(res);});}
 $('join').onsubmit=e=>{e.preventDefault();emit('player:join',{name:$('name').value},r=>{token=r.token;sessionStorage.setItem('battleships-token',token);$('error').textContent='';});};
-$('lock-mode').onclick=()=>{lockMode=!lockMode;$('lock-mode').textContent=lockMode?'🔒 Lock mode: ON':'🔓 Lock mode: OFF';$('lock-mode').setAttribute('aria-pressed',String(lockMode));if(state?.me)render(state)};
-
+function setLockMode(next){
+ lockMode=next;
+ $('lock-mode').textContent=next?'🔒 LOCK MODE ON — click tiles to lock/unlock':'🎯 VOTE MODE — click tiles to vote';
+ $('lock-mode').setAttribute('aria-pressed',String(next));
+ $('enemy').classList.toggle('is-lock-mode',next);
+ $('lock-status').textContent=next?'LOCK MODE: click any unshot water square, even between turns. Click the button again to vote.':'VOTE MODE: normal clicks vote on your turn. Use Lock mode to mark squares.';
+ if(state?.me)render(state);
+}
+$('lock-mode').onclick=()=>setLockMode(!lockMode);
 function toggleTargetLock(cell){
- socket.emit('target:lock',cell,res=>{
-  const labelText=label(...cell.split(',').map(Number));
-  $('lock-status').textContent=!res?.ok
-   ?res?.error||'Could not change lock'
-   :res.locked?'🔒 '+labelText+' locked for your team':'🔓 '+labelText+' unlocked';
+ const loc=label(...cell.split(',').map(Number));
+ $('lock-status').textContent='Updating '+loc+'…';
+ socket.timeout(7000).emit('target:lock',cell,(err,res)=>{
+  if(err||!res?.ok){$('lock-status').textContent='Could not change '+loc+': '+(res?.error||'Server did not respond');return}
+  $('lock-status').textContent=res.locked?'🔒 '+loc+' LOCKED for your team':'🔓 '+loc+' UNLOCKED for your team';
  });
 }
-// Delegation handles right-click even if a tile is re-rendered during a live state update.
+// One delegated handler is attached once, so it survives every live grid redraw.
+$('enemy').addEventListener('click',e=>{
+ const tile=e.target.closest('button.cell[data-cell]');
+ if(!tile||!$('enemy').contains(tile))return;
+ const cell=tile.dataset.cell,board=state?.board;
+ if(!state?.me||!board)return;
+ const lockable=(state.phase==='battle'||state.phase==='paused')&&!board.attacks.includes(cell)&&!board.enemyIslands.includes(cell);
+ if(lockMode||e.shiftKey){
+  e.preventDefault();e.stopPropagation();
+  if(lockable)toggleTargetLock(cell);
+  else $('lock-status').textContent='That square cannot be locked.';
+  return;
+ }
+ if(state.phase==='battle'&&state.turn===state.me.team&&board.options.includes(cell))emit('vote',cell);
+});
 $('enemy').addEventListener('contextmenu',e=>{
- const tile=e.target.closest('button.cell.lockable');
+ const tile=e.target.closest('button.cell[data-cell]');
  if(!tile||!$('enemy').contains(tile))return;
  e.preventDefault();
- toggleTargetLock(tile.dataset.cell);
+ if(state?.me&&(state.phase==='battle'||state.phase==='paused'))toggleTargetLock(tile.dataset.cell);
 });
-
 $('chat-form').onsubmit=e=>{e.preventDefault();const input=$('chat-input'),message=input.value.trim();if(!message)return;socket.emit('chat:send',message,r=>{if(r?.ok){input.value='';$('chat-error').textContent='';}else $('chat-error').textContent=r?.error||'Message not sent';});};
 socket.on('connect',()=>{if(token)socket.emit('player:resume',token,r=>{if(!r?.ok){token=null;sessionStorage.removeItem('battleships-token');$('error').textContent='Your previous session ended. Enter your name to join again.';}});});
 socket.on('disconnect',reason=>{if(reason==='io server disconnect'&&!token)socket.connect();});
@@ -46,19 +66,14 @@ function board(el,ships,shots,hits,sunk,selectable,vote,votes={},islands=[],size
    if(segments.has(coord(r+1,c)))b.classList.add('sunk-join-bottom');
    b.setAttribute('aria-label',ship.name+' sunk, '+label(r,c));
   }
-  if(isLocked){b.classList.add('locked-square');b.textContent='🔒';b.title='Locked for your team — Shift-click, right-click, or use Lock mode to unlock';b.setAttribute('aria-label',label(r,c)+' locked. Use Shift-click or Lock mode to unlock')}
+  if(isLocked){b.classList.add('locked-square');b.textContent='🔒';b.title='Locked by your team. Switch to Lock mode and click to unlock';b.setAttribute('aria-label',label(r,c)+' locked. Use Lock mode and click to unlock')}
   if(cell===latestIncoming){b.classList.add('latest-incoming');b.title='LATEST ENEMY ATTACK at '+label(r,c)+(hitSet.has(cell)?' — HIT':' — MISS');b.setAttribute('aria-label',b.title);const marker=document.createElement('span');marker.className='latest-attack-symbol';marker.textContent='⌖';marker.setAttribute('aria-hidden','true');b.append(marker)}
-  if(canLock){
-    b.classList.add('lockable');
-    b.dataset.cell=cell;
-    // Keep lockable squares enabled: disabled buttons do not reliably receive contextmenu in browsers.
-    b.onclick=e=>{
-      if(lockMode||e.shiftKey){toggleTargetLock(cell);return}
-      if(allowed.has(cell))emit('vote',cell);
-    };
-  }else if(allowed.has(cell))b.onclick=()=>emit('vote',cell);
-  else b.disabled=true;
-  if(allowed.has(cell))b.classList.add('selectable');
+  b.dataset.cell=cell;
+  // Keep grid buttons enabled in every phase; disabled buttons suppress pointer events in some browsers.
+  // All actions are handled centrally, with server validation.
+  if(canLock)b.classList.add('lockable');
+  if(allowed.has(cell)&&!lockMode)b.classList.add('selectable');
+  if(canLock&&lockMode)b.classList.add('lock-target');
   if(vote===cell)b.classList.add('voted');
   if(votes[cell]){const count=document.createElement('span');count.className='count';count.textContent=String(votes[cell]);count.title=votes[cell]+' teammate vote(s)';b.append(count)}
   el.append(b);
