@@ -31,3 +31,6 @@
 .board .cell.latest-incoming,.board button.cell.latest-incoming:disabled{position:relative;outline:3px solid #fff!important;outline-offset:-3px;box-shadow:0 0 0 2px #00e5ff,0 0 11px 3px rgba(0,229,255,.8)!important;z-index:2;opacity:1!important}
 .board .cell.latest-incoming .latest-attack-symbol{position:absolute;top:0;right:1px;color:#fff;background:#05546c;border-radius:3px;font-size:clamp(9px,1vw,15px);line-height:1;font-weight:900;padding:0 2px;pointer-events:none;text-shadow:0 0 2px #001e2e}
 @media(prefers-reduced-motion:no-preference){.board .cell.latest-incoming{animation:latest-attack-pulse 1.6s ease-in-out 3}@keyframes latest-attack-pulse{50%{filter:brightness(1.3)}}}
+
+/* Compact GM player controls */
+.gm-roster-actions{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px}.gm-roster-actions button{padding:5px 7px;font-size:11px}.gm-player-row{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:3px 0;border-bottom:1px solid #29455f;font-size:12px}.gm-player-row span{overflow-wrap:anywhere;min-width:0}.gm-kick{padding:3px 7px;font-size:11px;background:#a63a4a;flex-shrink:0}.gm-kick:hover{background:#ca4b5d}
