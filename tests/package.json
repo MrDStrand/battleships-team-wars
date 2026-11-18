@@ -1,0 +1,1 @@
+{"name":"battleships-live-integration-tests","private":true,"version":"1.0.0","scripts":{"test:live":"node live-game.js"},"dependencies":{"socket.io-client":"^4.8.1"}}
