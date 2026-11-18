@@ -4,6 +4,23 @@ const coord=(r,c)=>`${r},${c}`,label=(r,c)=>`${String.fromCharCode(65+r)}${c+1}`
 function emit(event,data,cb){socket.emit(event,data,res=>{if(!res?.ok) $('error').textContent=res?.error||'Request failed';else cb?.(res);});}
 $('join').onsubmit=e=>{e.preventDefault();emit('player:join',{name:$('name').value},r=>{token=r.token;sessionStorage.setItem('battleships-token',token);$('error').textContent='';});};
 $('lock-mode').onclick=()=>{lockMode=!lockMode;$('lock-mode').textContent=lockMode?'🔒 Lock mode: ON':'🔓 Lock mode: OFF';$('lock-mode').setAttribute('aria-pressed',String(lockMode));if(state?.me)render(state)};
+
+function toggleTargetLock(cell){
+ socket.emit('target:lock',cell,res=>{
+  const labelText=label(...cell.split(',').map(Number));
+  $('lock-status').textContent=!res?.ok
+   ?res?.error||'Could not change lock'
+   :res.locked?'🔒 '+labelText+' locked for your team':'🔓 '+labelText+' unlocked';
+ });
+}
+// Delegation handles right-click even if a tile is re-rendered during a live state update.
+$('enemy').addEventListener('contextmenu',e=>{
+ const tile=e.target.closest('button.cell.lockable');
+ if(!tile||!$('enemy').contains(tile))return;
+ e.preventDefault();
+ toggleTargetLock(tile.dataset.cell);
+});
+
 $('chat-form').onsubmit=e=>{e.preventDefault();const input=$('chat-input'),message=input.value.trim();if(!message)return;socket.emit('chat:send',message,r=>{if(r?.ok){input.value='';$('chat-error').textContent='';}else $('chat-error').textContent=r?.error||'Message not sent';});};
 socket.on('connect',()=>{if(token)socket.emit('player:resume',token,r=>{if(!r?.ok){token=null;sessionStorage.removeItem('battleships-token');$('error').textContent='Your previous session ended. Enter your name to join again.';}});});
 socket.on('disconnect',reason=>{if(reason==='io server disconnect'&&!token)socket.connect();});
@@ -29,17 +46,19 @@ function board(el,ships,shots,hits,sunk,selectable,vote,votes={},islands=[],size
    if(segments.has(coord(r+1,c)))b.classList.add('sunk-join-bottom');
    b.setAttribute('aria-label',ship.name+' sunk, '+label(r,c));
   }
-  if(isLocked){b.classList.add('locked-square');b.textContent='🔒';b.title='Locked by your team — right-click to unlock';b.setAttribute('aria-label',label(r,c)+' locked. Right-click to unlock')}
+  if(isLocked){b.classList.add('locked-square');b.textContent='🔒';b.title='Locked for your team — Shift-click, right-click, or use Lock mode to unlock';b.setAttribute('aria-label',label(r,c)+' locked. Use Shift-click or Lock mode to unlock')}
   if(cell===latestIncoming){b.classList.add('latest-incoming');b.title='LATEST ENEMY ATTACK at '+label(r,c)+(hitSet.has(cell)?' — HIT':' — MISS');b.setAttribute('aria-label',b.title);const marker=document.createElement('span');marker.className='latest-attack-symbol';marker.textContent='⌖';marker.setAttribute('aria-hidden','true');b.append(marker)}
   if(canLock){
     b.classList.add('lockable');
-    b.oncontextmenu=e=>{e.preventDefault();socket.emit('target:lock',cell,res=>{if(!res?.ok)$('lock-status').textContent=res?.error||'Lock action failed';else $('lock-status').textContent=res.locked?'Square '+label(r,c)+' locked for your team':'Square '+label(r,c)+' unlocked'})};
-  }
-  if(allowed.has(cell))b.classList.add('selectable');
-  if(canLock&&lockMode)b.onclick=()=>socket.emit('target:lock',cell,res=>{if(!res?.ok)$('lock-status').textContent=res?.error||'Lock action failed';else $('lock-status').textContent=res.locked?'Square '+label(r,c)+' locked for your team':'Square '+label(r,c)+' unlocked'});
-  else if(allowed.has(cell))b.onclick=()=>emit('vote',cell);
-  else if(canLock)b.onclick=()=>{};
+    b.dataset.cell=cell;
+    // Keep lockable squares enabled: disabled buttons do not reliably receive contextmenu in browsers.
+    b.onclick=e=>{
+      if(lockMode||e.shiftKey){toggleTargetLock(cell);return}
+      if(allowed.has(cell))emit('vote',cell);
+    };
+  }else if(allowed.has(cell))b.onclick=()=>emit('vote',cell);
   else b.disabled=true;
+  if(allowed.has(cell))b.classList.add('selectable');
   if(vote===cell)b.classList.add('voted');
   if(votes[cell]){const count=document.createElement('span');count.className='count';count.textContent=String(votes[cell]);count.title=votes[cell]+' teammate vote(s)';b.append(count)}
   el.append(b);
