@@ -38,7 +38,7 @@ function board(el,ships,shots,hits,sunk,selectable,vote,votes={},islands=[],size
   if(allowed.has(cell))b.classList.add('selectable');
   if(canLock&&lockMode)b.onclick=()=>socket.emit('target:lock',cell,res=>{if(!res?.ok)$('lock-status').textContent=res?.error||'Lock action failed';else $('lock-status').textContent=res.locked?'Square '+label(r,c)+' locked for your team':'Square '+label(r,c)+' unlocked'});
   else if(allowed.has(cell))b.onclick=()=>emit('vote',cell);
-  else if(canLock&&isLocked)b.onclick=()=>{};
+  else if(canLock)b.onclick=()=>{};
   else b.disabled=true;
   if(vote===cell)b.classList.add('voted');
   if(votes[cell]){const count=document.createElement('span');count.className='count';count.textContent=String(votes[cell]);count.title=votes[cell]+' teammate vote(s)';b.append(count)}
