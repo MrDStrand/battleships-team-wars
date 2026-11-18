@@ -26,3 +26,8 @@
 #own.board button.cell.miss,#enemy.board button.cell.miss,#own.board button.cell.miss:disabled,#enemy.board button.cell.miss:disabled,#own.board button.cell.ship.miss:disabled,#enemy.board button.cell.ship.miss:disabled{background:#e4c56b!important;background-image:none!important;color:#35290c!important;border:2px solid #f5df99!important;opacity:1!important;font-weight:900;box-shadow:inset 0 0 0 1px #f4d981}
 
 .teammate-roster{display:flex;flex-wrap:wrap;gap:5px;margin:5px 0 12px;max-height:100px;overflow-y:auto}.teammate{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;border:1px solid #36516b;border-radius:14px;background:#102f48;font-size:12px;max-width:100%;overflow-wrap:anywhere}.teammate.offline{color:#91a2b1;background:#152739}.presence-dot{display:inline-block;flex:0 0 7px;width:7px;height:7px;border-radius:50%;background:#39d98a}.teammate.offline .presence-dot{background:#8c97a5}
+
+/* Last enemy shot: clear overlay that preserves the square's hit/miss fill. */
+.board .cell.latest-incoming,.board button.cell.latest-incoming:disabled{position:relative;outline:3px solid #fff!important;outline-offset:-3px;box-shadow:0 0 0 2px #00e5ff,0 0 11px 3px rgba(0,229,255,.8)!important;z-index:2;opacity:1!important}
+.board .cell.latest-incoming .latest-attack-symbol{position:absolute;top:0;right:1px;color:#fff;background:#05546c;border-radius:3px;font-size:clamp(9px,1vw,15px);line-height:1;font-weight:900;padding:0 2px;pointer-events:none;text-shadow:0 0 2px #001e2e}
+@media(prefers-reduced-motion:no-preference){.board .cell.latest-incoming{animation:latest-attack-pulse 1.6s ease-in-out 3}@keyframes latest-attack-pulse{50%{filter:brightness(1.3)}}}
