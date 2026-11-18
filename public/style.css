@@ -52,8 +52,12 @@
 #enemy.board .cell.sunk-ship.sunk-join-bottom{border-bottom-color:#911c33!important;border-bottom-left-radius:0;border-bottom-right-radius:0}
 
 /* Explicit click-to-lock mode: all unshot water cells remain interactive between turns. */
-#enemy.board.is-lock-mode button.cell.lock-target{cursor:crosshair!important;outline:2px dashed #a5b4c8;outline-offset:-3px}
-#enemy.board.is-lock-mode button.cell.lock-target:hover{outline:3px solid #e9f2ff;outline-offset:-3px}
+#enemy.board.is-lock-mode button.cell.lock-target:not(.locked-square){background:#b8c3ce!important;background-image:none!important;color:#263743!important;border:1px solid #d0d8df!important;outline:none!important;box-shadow:none!important;cursor:pointer!important;opacity:1!important;filter:none!important}
+#enemy.board.is-lock-mode button.cell.lock-target:not(.locked-square):hover{background:#b8c3ce!important;background-image:none!important;outline:none!important;box-shadow:none!important;filter:none!important}
 #enemy.board.is-lock-mode button.cell.locked-square{cursor:crosshair!important}
 #enemy.board.is-lock-mode button.cell:not(.lock-target){cursor:not-allowed}
 .enemy-tools button[aria-pressed="true"]{background:#6a7585!important;border:2px solid #fff!important;box-shadow:0 0 0 2px #91b5cc;font-weight:900}
+
+/* Controls sit under Enemy Waters: no top offset that can change the grid alignment. */
+.enemy-tools{margin:9px 0 3px}
+#enemy.board.is-lock-mode .cell.lock-target:not(.locked-square).voted{outline:none!important;box-shadow:none!important}
