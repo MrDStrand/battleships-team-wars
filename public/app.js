@@ -46,7 +46,7 @@ socket.on('connect',()=>{if(token)socket.emit('player:resume',token,r=>{if(!r?.o
 socket.on('disconnect',reason=>{if(reason==='io server disconnect'&&!token)socket.connect();});
 socket.on('player:kicked',data=>{token=null;sessionStorage.removeItem('battleships-token');state=null;$('login').hidden=false;$('dashboard').hidden=true;$('error').textContent=data?.message||'You were removed by the Game Master.';});
 socket.on('state',s=>{state=s;$('status').textContent=s.phase.toUpperCase();$('login').hidden=!!s.me;$('dashboard').hidden=!s.me;if(s.me)render(s);});
-function board(el,ships,shots,hits,sunk,selectable,vote,votes={},islands=[],size=12,latestIncoming=null,locked=[],sunkShips=[],lockEnabled=false){
+function board(el,ships,shots,hits,sunk,selectable,vote,votes={},islands=[],size=10,latestIncoming=null,locked=[],sunkShips=[],lockEnabled=false){
  const occupied=new Set(ships.flatMap(s=>s.cells)),shotSet=new Set(shots),hitSet=new Set(hits),sunkSet=new Set(sunk.flat()),allowed=new Set(selectable),land=new Set(islands),lockedSet=new Set(locked),shipByCell=new Map();
  for(const ship of sunkShips)for(const cell of ship.cells)shipByCell.set(cell,ship);
  el.style.setProperty('--grid-size',size);el.replaceChildren();
