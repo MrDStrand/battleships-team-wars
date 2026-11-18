@@ -1,29 +1,27 @@
 # Test Battleships using GitHub Actions
 
-This workflow tests the **existing** Render deployment through Socket.IO. No software needs to be installed on your Mac.
+Use the repository's manual **Test Battleships live game** workflow to run real Socket.IO integration tests against the Render deployment. No Mac setup is needed.
 
-## One-time setup
+## Initial setup
 
-1. Open the `MrDStrand/battleships-team-wars` repository on GitHub.
-2. Open **Settings > Secrets and variables > Actions > New repository secret**.
-3. Name it `BATTLESHIPS_HOST_KEY` and enter the current Game Master key as the secret value. Never paste the key in workflow inputs, code, or logs.
-4. Ensure GitHub Actions are enabled under **Settings > Actions > General**.
+1. Repository **Settings > Secrets and variables > Actions**.
+2. Create the secret `BATTLESHIPS_HOST_KEY` with the same value as the deployed Render `HOST_KEY`. Never enter that key in a workflow input or commit it.
 
-## Each test run
+## Run a test
 
-1. Ensure no one is using the live game. This test resets the game and plays a full match.
-2. **Important:** The server keeps players registered even after a game reset. If a previous test ran or players have joined, restart the Render web service to clear in-memory players **before** testing.
-3. On GitHub open **Actions > Test Battleships live game > Run workflow**.
-4. Select the `main` branch, enter exactly `RESET` in `confirm_live_reset`,.
-5. Click the green **Run workflow** button, open the new run, and follow the `multiplayer-test` job.
-6. The job logs show `PASS` and `FAIL`. After completion, scroll to **Artifacts**, download `battleships-live-test-report`, and upload its JSON file to ChatGPT for analysis.
+1. Make sure nobody is currently using the live game. Close all **player** game browser tabs, including your own, to prevent automatic reconnection.
+2. The game must be in the **lobby** phase. If a game is underway or finished, return it to the lobby through the Game Master **Reset game** control (only when it is safe to discard that game). Do **not** restart Render just because disconnected player registrations remain.
+3. Open **Actions > Test Battleships live game > Run workflow**.
+4. Select `main`, type `RESET` as `confirm_live_reset`, and press the green **Run workflow** button.
+5. View the `multiplayer-test` job. Download the `battleships-live-test-report` artifact if you want detailed JSON results.
 
-## Safety and scope
+## Safety and cleanup
 
-- Requires exact `RESET` confirmation before the job runs.
-- Authenticates as Game Master, checks for existing registered players, and refuses to reset if any are found or the phase is not lobby.
-- Creates two Blue and two Red players, deploys ships on both boards, tests majority voting/chat/islands/Intelligence/pause/reconnect/hits/misses, and aims for a Blue victory.
-- Leaves a finished game and test player registrations in server memory. **Restart the Render service after testing** to return to a clean lobby.
-- Does not change server code, player UI, or Game Master UI.
-- This is a real Socket.IO integration test, **not** a visual/browser test of grid colors and layout.
-- Missing secret means the run fails with setup instructions; the secret is not printed.
+- The workflow refuses to run against any phase other than **lobby**.
+- The runner checks that **zero player sockets are connected**. If any are connected, it fails without resetting or removing them; close player tabs and try again.
+- With GM authentication, the runner calls `host:test-prepare`, a **test-only** server operation that clears disconnected registrations and resets an empty lobby. This operation also checks for active player connections and lobby phase on the server. It cannot run without GM authentication.
+- The workflow then joins four temporary players, checks random fleet placement, majority voting, privacy, chat, pause/resume, latest incoming attack markers, reconnection, hits/misses and a full game through victory.
+- A completed test leaves a **finished game**. Use Game Master **Reset game** to return to a lobby before another test. Disconnected temporary player registrations will be cleared safely during the next test preparation.
+- Actual visual browser testing remains separate from this Socket.IO integration run.
+
+**Important:** The workflow is destructive to an unused lobby, and manual `RESET` confirms that behavior. It does not interrupt a live game.
