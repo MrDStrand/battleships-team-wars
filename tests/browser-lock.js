@@ -36,6 +36,9 @@ async function main(){
   await ack(host,'host:start',null);
   const blue1=pages[0],red1=pages[1],blue2=pages[2],red2=pages[3];
   for(const p of pages)await p.locator('#enemy button.cell[data-cell="0,0"]').waitFor({state:'visible'});
+  assert.equal(await blue1.locator('#own button.cell').count(),100,'Blue own grid must have 100 cells');
+  assert.equal(await red1.locator('#enemy button.cell').count(),100,'Red enemy grid must have 100 cells');
+  console.log('PASS Chromium: both grids render exactly 100 squares');
   // Blue attacks first: Red must be able to lock, without being allowed to vote.
   assert.match(await red1.locator('#turn').innerText(),/Blue attacking/);
   await red1.locator('#lock-mode').click();
