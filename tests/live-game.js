@@ -35,9 +35,16 @@ async function run(){
  phase='joining';
  let all=[];
  for(let name of ['TestBlue1','TestRed1','TestBlue2','TestRed2']){let p=await connect(name);p.token=(await ok(p,'player:join',{name})).token;await wait(()=>p.state?.me,name+' joined');all.push(p)}
- blue=[all[0],all[2]];red=[all[1],all[3]];
- assert(blue.every(p=>p.state.me.team==='Blue')&&red.every(p=>p.state.me.team==='Red'),'Incorrect team assignment');pass('Four players allocated 2 versus 2');
- assert(blue[0].state.teams.Blue.players.length===2&&!blue[0].state.admin&&!red[0].state.admin,'Roster or admin-data problem');pass('Teammate rosters and GM data privacy');
+ const assignments=all.map(p=>p.name+'='+p.state.me.team);
+ console.log('TEAM ASSIGNMENTS '+assignments.join(', '));
+ blue=all.filter(p=>p.state.me.team==='Blue');red=all.filter(p=>p.state.me.team==='Red');
+ const joinedRoster=[...host.state.teams.Blue.players,...host.state.teams.Red.players];
+ const expected=new Set(all.map(p=>p.name));
+ assert(joinedRoster.length===4&&joinedRoster.every(p=>expected.has(p.name)),'Unexpected registered player(s) joined during test: '+joinedRoster.map(p=>p.name).join(', ')+'. Close all player tabs, return to lobby and retry.');
+ assert(blue.length===2&&red.length===2,'Teams not balanced: '+assignments.join(', '));
+ await wait(()=>blue.every(p=>p.state.teams.Blue.players.length===2)&&red.every(p=>p.state.teams.Red.players.length===2),'rosters synchronized');
+ pass('Four players allocated 2 versus 2',assignments.join(', '));
+ assert(!blue[0].state.admin&&!red[0].state.admin,'GM data leaked to players');pass('Teammate rosters and GM data privacy');
  await ok(blue[0],'chat:send','Blue-only integration test');
  await wait(()=>blue[1].state?.chat?.some(x=>x.text==='Blue-only integration test'),'Blue private chat');
  assert(!red[0].state.chat.some(x=>x.text==='Blue-only integration test'),'Private chat leaked');pass('Team-private chat');
@@ -88,7 +95,7 @@ async function run(){
  blue[1].sock.disconnect();await wait(()=>blue[0].state?.board?.needed===1,'Blue majority after disconnect');
  let solo=option('Blue',c=>redCells.has(c));assert(solo,'No legal solo attack');await ok(blue[0],'vote',solo);attacks++;await wait(()=>host.state.admin.Blue.shots.includes(solo),'solo-majority shot');pass('Disconnected teammate no longer blocks majority');
  let reconnect=await connect('Returning Blue');reconnect.token=blue[1].token;
- await ok(reconnect,'player:join',{name:'TestBlue2',token:reconnect.token});await wait(()=>reconnect.state?.me?.team==='Blue','Blue reconnect');blue[1]=reconnect;pass('Reconnect with existing identity');
+ await ok(reconnect,'player:join',{name:blue[1].name,token:reconnect.token});await wait(()=>reconnect.state?.me?.team==='Blue','Blue reconnect');blue[1]=reconnect;pass('Reconnect with existing identity');
  await wait(()=>red[0].state?.turn==='Red'&&red[0].state?.phase==='battle','Red follow-up');
  let redMiss=option('Red',c=>!blueCells.has(c));assert(redMiss,'No legal Red miss');await fire(red,'Red',redMiss);await wait(()=>blue[0].state.board.latestIncoming===redMiss,'Latest incoming marker moved');pass('Latest incoming marker moves on new enemy shot',redMiss);
  for(let target of [...redCells].filter(c=>!host.state.admin.Blue.shots.includes(c))){
