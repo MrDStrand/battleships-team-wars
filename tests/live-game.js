@@ -1,7 +1,8 @@
 'use strict';
 const {io}=require('socket.io-client');
 const fs=require('node:fs'),path=require('node:path');
-const url='https://battleships-team-wars.onrender.com';
+// Use the dedicated loopback-only server started by GitHub Actions. Never connect test credentials to the public deployment.
+const url='http://127.0.0.1:3100';
 const key=process.env.BATTLESHIPS_HOST_KEY;
 const reportFile=path.join(__dirname,'battleships-test-report.json');
 const test=[],clients=[],started=Date.now();
@@ -17,9 +18,8 @@ async function two(p,q,target,label){const snapshot=p.state;assert(snapshot?.boa
 async function fire(pair,team,target){await wait(()=>pair[0].state?.phase==='battle'&&pair[0].state?.turn===team,team+' attack turn');await two(...pair,target,team+' attack');attacks++;await wait(()=>host.state?.admin?.[team]?.shots?.includes(target),team+' shot recorded at '+target)}
 function option(team,allowed){let p=team==='Blue'?blue[0]:red[0];return (p.state?.board?.options||[]).find(allowed)}
 async function run(){
- assert(process.env.CONFIRM_LIVE_RESET==='RESET','Enter exactly RESET in confirm_live_reset');
- assert(key,'Set repository Actions secret BATTLESHIPS_HOST_KEY');
- assert(url.startsWith('https://'),'Target must use HTTPS');
+ assert(key,'Isolated test session key is missing');
+ assert(url==='http://127.0.0.1:3100','Integration tests must target the isolated loopback server');
  phase='preflight';
  host=await connect('Game Master');await wait(()=>host.state,'initial state');
  let denied=await ack(host,'host:reset',null);assert(!denied.ok,'Unauthenticated reset was allowed');pass('GM-only reset enforced');
@@ -112,4 +112,4 @@ async function run(){
  assert(host.state.winner==='Blue','Unexpected winner '+host.state.winner);pass('Full game reaches Blue victory',String(attacks)+' attacks');
  assert(blue[0].state.intelligence.length>1,'Intelligence was not refreshed');pass('Intelligence refreshed during play');
 }
-(async()=>{try{await run()}catch(e){test.push({name:'Interrupted during '+phase,status:'FAIL',detail:String(e.message||e)});console.error('FAIL '+String(e.message||e));process.exitCode=1}finally{const result={target:url,date:new Date().toISOString(),phase:host?.state?.phase||phase,passed:test.filter(t=>t.status==='PASS').length,failed:test.filter(t=>t.status==='FAIL').length,attacks,duration_seconds:Math.round((Date.now()-started)/1000),tests:test,note:'Socket.IO multiplayer test only, not browser color or layout testing. Rerun safely from an empty lobby after restarting or after clearing disconnected registrations through authenticated test preparation.'};fs.writeFileSync(reportFile,JSON.stringify(result,null,2));console.log('RESULT '+result.passed+' passed, '+result.failed+' failed');console.log('REPORT '+reportFile);clients.forEach(p=>p.sock.disconnect())}})();
+(async()=>{try{await run()}catch(e){test.push({name:'Interrupted during '+phase,status:'FAIL',detail:String(e.message||e)});console.error('FAIL '+String(e.message||e));process.exitCode=1}finally{const result={target:url,date:new Date().toISOString(),phase:host?.state?.phase||phase,passed:test.filter(t=>t.status==='PASS').length,failed:test.filter(t=>t.status==='FAIL').length,attacks,duration_seconds:Math.round((Date.now()-started)/1000),tests:test,note:'Isolated GitHub Actions Socket.IO integration test against a temporary local server using the current repository code. NOT a test of deployed Render, nor a visual browser test.'};fs.writeFileSync(reportFile,JSON.stringify(result,null,2));console.log('RESULT '+result.passed+' passed, '+result.failed+' failed');console.log('REPORT '+reportFile);clients.forEach(p=>p.sock.disconnect())}})();
