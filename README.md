@@ -21,8 +21,8 @@ These controls are server-authorized using the existing `HOST_KEY`. Player IDs u
 
 ## Team target locks and sunk ships
 
-- On **Enemy waters**, any registered player can **right-click a legal, unshot water square** to lock it for their entire team. A second right-click by any teammate unlocks it.
+- On **Enemy waters**, any registered player can **Shift-click or right-click a legal, unshot water square** to lock it for their entire team. Any teammate can unlock it using the same interaction. Locking and unlocking is also available through the Lock mode button (click/tap).
 - Locked squares appear **grey with 🔒**, synchronize instantly to all teammates, and are not offered as valid targets or accepted as votes by the server. Locking a square clears outstanding votes on that square without triggering an attack.
 - Locks are private to each team, may be changed during battle or pause (even when it is not that team's turn), and are cleared on game reset. Previously attacked squares and islands cannot be locked.
-- For touchscreens or devices without right-click, use the **Lock mode** button above Enemy waters and tap a square to lock/unlock; turn the mode off to vote normally.
+- For touchscreens or devices without right-click, use the **Lock mode** button above Enemy waters and tap a square to lock/unlock; turn the mode off to vote normally. Normal clicks vote; Shift-clicks lock/unlock. The previous individual-button right-click handler was replaced with a delegated handler for more reliable browser behavior.
 - When every square of an enemy ship has been hit, **all its segments become a connected crimson hull** on the enemy board. The server reveals only fully sunk ships, not undiscovered ship positions. Hover a sunk segment to see the ship name.
