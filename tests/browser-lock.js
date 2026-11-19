@@ -118,7 +118,7 @@ async function main(){
   await blue1.locator('#radar-points .radar-blip.outgoing').first().waitFor({timeout:8000});
   await red1.locator('#radar-points .radar-blip.incoming').first().waitFor({timeout:8000});
   await blue1.locator('#history .battle-event').first().waitFor({timeout:8000});
-  assert.match(await blue1.locator('#history .battle-event .event-time').first().innerText(),/^\\d{2}:\\d{2}:\\d{2}$/,'Battle event missing time');
+  assert.match(await blue1.locator('#history .battle-event .event-time').first().innerText(),/^\d{2}:\d{2}:\d{2}$/,'Battle event missing time');
   console.log('PASS Chromium: radar plots confirmed attacks and battle results include HH:MM:SS');
 
   // Continue a complete browser match to verify both sides see the correct final result.
