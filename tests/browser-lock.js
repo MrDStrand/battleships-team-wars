@@ -55,6 +55,15 @@ async function main(){
    await p.getByRole('button',{name:'Join game'}).click();
    await p.locator('#dashboard').waitFor({state:'visible',timeout:8000});
   }
+  // Radar must visibly rotate after joining, even before the Game Master starts battle.
+  const sweep=pages[0].locator('.radar-sweep');
+  await sweep.waitFor({state:'visible',timeout:8000});
+  const before=await sweep.evaluate(el=>getComputedStyle(el).transform);
+  await pages[0].waitForTimeout(300);
+  const after=await sweep.evaluate(el=>getComputedStyle(el).transform);
+  assert.notEqual(after,before,'Sonar beam must rotate while in the lobby');
+  assert.equal(await sweep.evaluate(el=>getComputedStyle(el).animationPlayState),'running','Sonar must not be paused in lobby');
+  console.log('PASS Chromium: radar beam rotates continuously before battle starts');
   await ack(host,'host:start',null);
   const blue1=pages[0],red1=pages[1],blue2=pages[2],red2=pages[3];
   for(const p of pages)await p.locator('#enemy button.cell[data-cell="0,0"]').waitFor({state:'visible'});
