@@ -35,3 +35,15 @@ These controls are server-authorized using the existing `HOST_KEY`. Player IDs u
 - Players see **YOU / ENEMY** battle status and a prominent **YOUR TURN / ENEMY TURN** banner rather than Blue/Red battle labels. Blue and Red remain internal identifiers and remain visible on the GM screen for team administration.
 - At game end, players on the winning team see an animated fireworks/explosion **YOU WIN!** screen. Players on the losing team see a skull-and-crossbones pirate flag **YOUR FLEET IS SUNK** defeat screen. Both have a **View battlefield** button; reduced-motion preferences disable the animation.
 - The underlying server-authoritative ship, voting, locking and victory rules remain unchanged.
+
+## Naval Command Center design (November 2026)
+
+The player interface uses an immersive, responsive tactical command-center layout: a dramatic live turn banner, a fully animated CSS sonar display, two 10x10 tactical grids, fleet-damage meters, team strength panels, teammate presence, and a timestamped combat log. The Game Master interface remains authenticated and preserves all game controls.
+
+- **Radar is functional:** it continuously sweeps while battle is active and plots blips for confirmed incoming and outgoing shots, distinguishing hits from misses. It never scans or reveals undiscovered enemy ship locations. The scan state and contact count update from server state. Motion stops for players who enable Reduced Motion.
+- **Battle event timestamps:** the server records the time, attacking team, internal square, result (HIT/MISS/SUNK), and sunken ship name if applicable. The player and Game Master logs display time in the viewer's local time zone as `HH:MM:SS`, with the normal chess-style A-J/10-1 coordinates.
+- **Retired features:** the intelligence feed and team chat were intentionally removed from both the interface and server event/state handlers. Neither feature is retained as a hidden stream.
+- All previous mechanics remain: automatically generated five-ship fleets, islands, vote-majority attacks, team-wide square locks, ship silhouettes, sunk hull highlighting, pause/resume, protected Game Master management, and victory/defeat effects.
+- Use the isolated GitHub Actions test workflow for the automated Chromium browser smoke test and Socket.IO multiplayer integration suite. Those are separate from visual testing of the Render deployment.
+
+The design deliberately uses CSS/SVG-style elements rather than external art services or trackers. No secrets are included in the repository.
