@@ -135,6 +135,55 @@ function updateEndgame(s){
 }
 // The sonar is alive: a continuous sweep and only real, confirmed shots as blips.
 // No unhit enemy ship location is ever used to populate the display.
+// The sweep keeps rotating in CSS; this clock emits a visual echo each revolution.
+// Audio is strictly opt-in to respect browser autoplay policies and shared spaces.
+const SONAR_PERIOD_MS=4500;
+let sonarSoundEnabled=false,sonarAudio=null,sonarSweepCount=0;
+function sonarChime(){
+ if(!sonarSoundEnabled||document.hidden||!state?.me||state.phase!=='battle')return;
+ try{
+  const Context=window.AudioContext||window.webkitAudioContext;
+  if(!Context)return;
+  if(!sonarAudio)sonarAudio=new Context();
+  if(sonarAudio.state!=='running')return;
+  const now=sonarAudio.currentTime,osc=sonarAudio.createOscillator(),gain=sonarAudio.createGain();
+  osc.type='sine';osc.frequency.setValueAtTime(930,now);
+  osc.frequency.exponentialRampToValueAtTime(510,now+.23);
+  gain.gain.setValueAtTime(.0001,now);
+  gain.gain.exponentialRampToValueAtTime(.035,now+.012);
+  gain.gain.exponentialRampToValueAtTime(.0001,now+.34);
+  osc.connect(gain);gain.connect(sonarAudio.destination);
+  osc.start(now);osc.stop(now+.36);
+ }catch(e){$('radar-audio-status').textContent='AUDIO UNAVAILABLE';sonarSoundEnabled=false;$('radar-sound').setAttribute('aria-pressed','false')}
+}
+function sonarPulse(){
+ if(!state?.me||state.phase!=='battle'||document.hidden)return;
+ const layer=$('radar-pings'),ring=document.createElement('span');
+ ring.className='sonar-echo';
+ // Replacing a finished echo, instead of accumulating DOM elements.
+ layer.replaceChildren(ring);
+ sonarSweepCount++;
+ // One soft ping every two or three revolutions rather than continuous beeping.
+ if(sonarSweepCount%5===0||sonarSweepCount%5===2)sonarChime();
+}
+setInterval(sonarPulse,SONAR_PERIOD_MS);
+$('radar-sound').onclick=async()=>{
+ sonarSoundEnabled=!sonarSoundEnabled;
+ if(sonarSoundEnabled){
+  try{
+   const Context=window.AudioContext||window.webkitAudioContext;
+   if(!Context)throw Error('Web Audio unavailable');
+   if(!sonarAudio)sonarAudio=new Context();
+   await sonarAudio.resume();
+   if(sonarAudio.state!=='running')throw Error('Audio suspended');
+   sonarChime();
+  }catch(e){sonarSoundEnabled=false;$('radar-audio-status').textContent='AUDIO UNAVAILABLE'}
+ }
+ $('radar-sound').setAttribute('aria-pressed',String(sonarSoundEnabled));
+ $('radar-sound').textContent=sonarSoundEnabled?'◖)) MUTE PING':'◖)) ENABLE PING';
+ if(sonarSoundEnabled)$('radar-audio-status').textContent='AUDIO ON';
+ else if($('radar-audio-status').textContent!=='AUDIO UNAVAILABLE')$('radar-audio-status').textContent='SOUND OFF';
+};
 function updateRadar(s){
  const b=s.board,contacts=$('radar-points'),points=[];
  const enemyHits=new Set(b.hitCells),ownHits=new Set(b.ships.flatMap(ship=>ship.hits));
