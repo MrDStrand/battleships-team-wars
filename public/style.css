@@ -290,7 +290,8 @@ body.command-ui header.command-header span{margin-left:0}
 body.command-ui header.command-header .brand-icon{color:#5cecf1}
 body.command-ui header.command-header .live-dot{background:#27e9b8}
 body.command-ui .system-readout span{color:#9cbdc9}
-body.command-ui .radar:not(.radar-operating) .radar-sweep{animation-play-state:paused;opacity:.32}
+/* Radar always sweeps when displayed, including lobby and between rounds. */
+body.command-ui .radar:not(.radar-operating) .radar-sweep{animation-play-state:running;opacity:1}
 body.command-ui .radar:not(.radar-operating) .radar-blip{animation-play-state:paused}
 
 
@@ -323,3 +324,21 @@ body.command-ui .radar:not(.radar-operating) .radar-blip{animation-play-state:pa
 .sonar-audio-row #radar-sound[aria-pressed="true"]{background:#075747;border-color:#40ddb1;color:#e2fff6}
 .sonar-audio-row #radar-audio-status{font:9px monospace;letter-spacing:.5px;color:#7cb3ba;white-space:nowrap}
 @media(prefers-reduced-motion:reduce){.sonar-echo{animation:none!important;opacity:0!important}.command-ui .radar-sweep{animation:none!important;will-change:auto}}
+
+/* Explicit visible sweeping beam: one bright leading edge and a long fading green trail. */
+body.command-ui .radar .radar-sweep{
+ animation:sonar-spin 4.5s linear infinite;
+ animation-play-state:running;
+ transform-origin:50% 50%;
+ background:conic-gradient(from 0deg at 50% 50%,transparent 0deg,transparent 235deg,rgba(0,255,153,.03) 270deg,rgba(43,255,181,.22) 325deg,rgba(98,255,206,.62) 356deg,rgba(162,255,225,.8) 359deg,transparent 360deg);
+ opacity:1;
+}
+body.command-ui .radar .radar-sweep::after{
+ content:"";position:absolute;left:50%;top:50%;width:49%;height:3px;
+ background:linear-gradient(90deg,rgba(90,255,204,.35),#c8fff2);
+ transform:rotate(-90deg);transform-origin:left center;
+ box-shadow:0 0 11px 2px rgba(60,255,205,.9);
+}
+@media(prefers-reduced-motion:reduce){
+ body.command-ui .radar .radar-sweep{animation:none!important;transform:rotate(45deg)}
+}
