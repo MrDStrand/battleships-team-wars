@@ -306,3 +306,20 @@ body.command-ui .radar:not(.radar-operating) .radar-blip{animation-play-state:pa
 .gm-layout.grids-hidden>aside.panel{width:100%;max-width:none}
 @media(max-width:1000px){.gm-layout{grid-template-columns:1fr}.gm-team-grids{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:580px){.gm-team-grids{grid-template-columns:1fr}}
+
+/* Real rotating sonar sweep with periodic outward echo waves. */
+.command-ui .radar-sweep{animation:sonar-spin 4.5s linear infinite;z-index:1;will-change:transform}
+.command-ui .radar-sweep::after{width:50%;height:2px;background:linear-gradient(to right,#a7ffe9,#48ffd7);box-shadow:0 0 12px 3px #42ffce}
+.radar-pings{position:absolute;inset:0;border-radius:50%;overflow:hidden;z-index:2;pointer-events:none}
+.sonar-echo{position:absolute;left:50%;top:50%;width:14px;height:14px;border:2px solid #76ffe1;border-radius:50%;transform:translate(-50%,-50%) scale(.4);box-shadow:0 0 12px 3px #5fffe057;animation:sonar-echo-out 2.1s ease-out forwards}
+@keyframes sonar-echo-out{
+ 0%{opacity:.9;transform:translate(-50%,-50%) scale(.4)}
+ 30%{opacity:.58}
+ 100%{opacity:0;transform:translate(-50%,-50%) scale(17)}
+}
+.command-ui .radar-blip{z-index:3}
+.sonar-audio-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}
+.sonar-audio-row #radar-sound{padding:6px 9px;background:#133d4e;border:1px solid #38899a;border-radius:6px;font-size:10px;color:#b9ffef;font-family:monospace;font-weight:900;letter-spacing:.45px}
+.sonar-audio-row #radar-sound[aria-pressed="true"]{background:#075747;border-color:#40ddb1;color:#e2fff6}
+.sonar-audio-row #radar-audio-status{font:9px monospace;letter-spacing:.5px;color:#7cb3ba;white-space:nowrap}
+@media(prefers-reduced-motion:reduce){.sonar-echo{animation:none!important;opacity:0!important}.command-ui .radar-sweep{animation:none!important;will-change:auto}}
