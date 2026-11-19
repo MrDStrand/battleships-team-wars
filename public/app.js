@@ -45,20 +45,32 @@ socket.on('connect',()=>{if(token)socket.emit('player:resume',token,r=>{if(!r?.o
 socket.on('disconnect',reason=>{if(reason==='io server disconnect'&&!token)socket.connect();});
 socket.on('player:kicked',data=>{token=null;sessionStorage.removeItem('battleships-token');state=null;$('login').hidden=false;$('dashboard').hidden=true;$('error').textContent=data?.message||'You were removed by the Game Master.';});
 socket.on('state',s=>{state=s;$('status').textContent=s.phase.toUpperCase();$('login').hidden=!!s.me;$('dashboard').hidden=!s.me;if(s.me)render(s);});
+// Use distinct bow, hull and stern shapes for ships in either orientation.
+function shipSegment(cells,cell){
+ const [r,c]=cell.split(',').map(Number);
+ const coords=cells.map(x=>x.split(',').map(Number));
+ const horizontal=coords.every(([row])=>row===coords[0][0]);
+ const values=coords.map(x=>horizontal?x[1]:x[0]);
+ const position=horizontal?c:r,first=Math.min(...values),last=Math.max(...values);
+ if(position===first)return horizontal?'◀':'▲';
+ if(position===last)return horizontal?'▶':'▼';
+ return horizontal?'━':'┃';
+}
 function board(el,ships,shots,hits,sunk,selectable,vote,votes={},islands=[],size=10,latestIncoming=null,locked=[],sunkShips=[],lockEnabled=false){
- const occupied=new Set(ships.flatMap(s=>s.cells)),shotSet=new Set(shots),hitSet=new Set(hits),sunkSet=new Set(sunk.flat()),allowed=new Set(selectable),land=new Set(islands),lockedSet=new Set(locked),shipByCell=new Map();
+ const occupied=new Set(ships.flatMap(s=>s.cells)),shotSet=new Set(shots),hitSet=new Set(hits),sunkSet=new Set(sunk.flat()),allowed=new Set(selectable),land=new Set(islands),lockedSet=new Set(locked),shipByCell=new Map(),ownShipByCell=new Map();
+ for(const ownShip of ships)for(const segment of ownShip.cells)ownShipByCell.set(segment,ownShip);
  for(const ship of sunkShips)for(const cell of ship.cells)shipByCell.set(cell,ship);
  el.style.setProperty('--grid-size',size);el.replaceChildren();
  for(let r=0;r<size;r++)for(let c=0;c<size;c++){
   const cell=coord(r,c),b=document.createElement('button'),ship=shipByCell.get(cell),isLocked=lockedSet.has(cell),canLock=lockEnabled&&!land.has(cell)&&!shotSet.has(cell);
   b.type='button';b.className='cell';b.textContent=label(r,c);
   if(land.has(cell)){b.classList.add('island');b.title='Island — blocked';b.textContent='▲'}
-  if(occupied.has(cell))b.classList.add('ship');
+  if(occupied.has(cell)){b.classList.add('ship','ship-hull');const ownShip=ownShipByCell.get(cell);b.textContent=shipSegment(ownShip.cells,cell);b.title=ownShip.name+' at '+label(r,c)}
   if(shotSet.has(cell)){const hit=hitSet.has(cell);if(hit&&el.id==='own')b.classList.remove('ship');b.classList.add(hit?(el.id==='own'?'own-hit':'hit'):'miss');b.title=(hit?'Hit':'Miss')+' at '+label(r,c);b.textContent=hit?'✕':'•'}
   if(sunkSet.has(cell))b.classList.add('sunk');
   if(ship){
    const segments=new Set(ship.cells);
-   b.classList.add('sunk-ship');b.textContent='▰';b.title=ship.name+' SUNK at '+label(r,c);
+   b.classList.add('sunk-ship','ship-hull');b.textContent=shipSegment(ship.cells,cell);b.title=ship.name+' SUNK at '+label(r,c);
    if(segments.has(coord(r,c-1)))b.classList.add('sunk-join-left');
    if(segments.has(coord(r,c+1)))b.classList.add('sunk-join-right');
    if(segments.has(coord(r-1,c)))b.classList.add('sunk-join-top');
