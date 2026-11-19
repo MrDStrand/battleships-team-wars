@@ -63,6 +63,12 @@ async function main(){
   console.log('PASS Chromium: both grids render exactly 100 squares');
   assert.equal(await blue1.locator('.radar-sweep').count(),1,'Animated radar sweep element missing');
   assert.equal(await blue1.locator('#radar-points').count(),1,'Radar contact layer missing');
+  assert.equal(await blue1.locator('#radar-pings').count(),1,'Sonar echo layer missing');
+  assert.equal(await blue1.locator('#radar-sound').getAttribute('aria-pressed'),'false','Sonar audio must be opt-in');
+  assert.equal(await blue1.locator('#radar-audio-status').innerText(),'SOUND OFF','Sonar should start muted');
+  assert.equal(await blue1.locator('.radar-sweep').evaluate(el=>getComputedStyle(el).animationDuration),'4.5s','Radar period should be 4.5 seconds');
+  await blue1.locator('#radar-pings .sonar-echo').waitFor({state:'attached',timeout:9000});
+  assert.equal(await blue1.locator('#radar-pings .sonar-echo').count(),1,'Sonar should have a single live ripple');
   assert.equal(await blue1.locator('#chat-form').count(),0,'Retired chat still visible');
   assert.equal(await blue1.locator('#intelligence').count(),0,'Retired intelligence still visible');
   assert.equal(await blue1.locator('.radar-sweep').evaluate(el=>getComputedStyle(el).animationName),'sonar-spin','Radar sweep should spin during active gameplay');
