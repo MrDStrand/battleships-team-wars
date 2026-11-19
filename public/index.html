@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#061421">
 <title>Battleships — Naval Command</title>
-<link rel="stylesheet" href="/style.css?v=20261119-command1">
+<link rel="stylesheet" href="/style.css?v=20261119-sonarping1">
 </head>
 <body class="command-ui">
 <header class="command-header">
@@ -30,9 +30,9 @@
         <div class="panel-heading"><span class="overline">SONAR // ACTIVE</span><span class="mini-live">● LIVE</span></div>
         <h3>TACTICAL RADAR</h3>
         <div id="radar" class="radar" aria-label="Animated radar showing confirmed attack coordinates only">
-          <div class="radar-rings"></div><div class="radar-crosshair"></div><div class="radar-sweep"></div><div id="radar-points" class="radar-points"></div><div class="radar-center"></div>
+          <div class="radar-rings"></div><div class="radar-crosshair"></div><div class="radar-sweep"></div><div id="radar-pings" class="radar-pings" aria-hidden="true"></div><div id="radar-points" class="radar-points"></div><div class="radar-center"></div>
         </div>
-        <div class="radar-meta"><span>SCAN <b id="radar-scan">STANDBY</b></span><span>CONTACTS <b id="radar-contacts">00</b></span></div>
+        <div class="radar-meta"><span>SCAN <b id="radar-scan">STANDBY</b></span><span>CONTACTS <b id="radar-contacts">00</b></span></div><div class="sonar-audio-row"><button type="button" id="radar-sound" aria-pressed="false" title="Enable or mute gentle sonar pings">◖)) ENABLE PING</button><span id="radar-audio-status" role="status">SOUND OFF</span></div>
         <p class="radar-note">Confirmed shots only. No hidden ship locations.</p>
       </section>
       <section class="panel fleet-panel"><div class="overline">ASSET STATUS</div><h3>YOUR ARMADA</h3><div id="fleet"></div></section>
@@ -57,5 +57,5 @@
 </section>
 <div id="endgame" class="endgame" hidden role="dialog" aria-modal="true" aria-labelledby="endgame-title"><div id="endgame-effects" class="endgame-effects" aria-hidden="true"></div><div class="endgame-card"><div id="endgame-emblem" class="endgame-emblem"></div><h1 id="endgame-title"></h1><p id="endgame-subtitle"></p><button type="button" id="endgame-close">View battlefield</button></div></div>
 </main>
-<script src="/socket.io/socket.io.js"></script><script src="/app.js?v=20261119-command1"></script>
+<script src="/socket.io/socket.io.js"></script><script src="/app.js?v=20261119-sonarping1"></script>
 </body></html>
