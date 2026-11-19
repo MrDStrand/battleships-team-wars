@@ -47,3 +47,14 @@ The player interface uses an immersive, responsive tactical command-center layou
 - Use the isolated GitHub Actions test workflow for the automated Chromium browser smoke test and Socket.IO multiplayer integration suite. Those are separate from visual testing of the Render deployment.
 
 The design deliberately uses CSS/SVG-style elements rather than external art services or trackers. No secrets are included in the repository.
+
+## Game Master as an optional player
+
+The authenticated **Game Master screen** includes a **Join the battle (optional)** panel. Before the game starts, the host can enter a callsign, select **Blue** or **Red**, and choose **Join as Player**. The host's player account counts as one normal member of that team, including the usual majority threshold and one vote per eligible player.
+
+- A dedicated **Enemy Waters** panel appears on the Game Master page, with its own 10×10 attack grid and Vote/Lock switch. The host can vote on their team's turn, and lock or unlock team-shared squares even during the enemy's turn.
+- **All Game Master controls remain available** while participating. Joining is optional and permitted only in the lobby; leaving the player role is supported at any time without disconnecting the Game Master.
+- The host player identity is stored locally as a session token so it can be resumed after signing back in to the Game Master screen. Resume of a host-player token is restricted to an authenticated Game Master socket.
+- Joining/playing/leaving and authorization are enforced by the server. Other players never receive private Game Master ship data.
+- **Fair play:** the Game Master can see both teams' hidden fleet positions. Participants who also host are responsible for not using that privileged information when voting; the system does not claim to conceal data from the host.
+- The isolated multiplayer suite and Chromium browser test cover authenticated joining, vote counting, no duplicate host registrations, player departure without losing admin access, and denial of host-player tokens to unauthenticated connections.
