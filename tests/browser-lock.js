@@ -45,10 +45,13 @@ async function main(){
   await blue1.waitForFunction(()=>document.getElementById('turn').textContent.includes('YOUR TURN'));
   assert.match(await red1.locator('#turn').innerText(),/ENEMY TURN/);
   assert.match(await blue1.locator('#turn').innerText(),/YOUR TURN/);
-  assert.equal(await blue1.locator('#enemy button.cell[data-cell="0,0"]').innerText(),'A1');
-  assert.equal(await blue1.locator('#enemy button.cell[data-cell="9,9"]').innerText(),'J10');
+  assert.equal(await blue1.locator('#enemy button.cell[data-cell="0,0"]').getAttribute('aria-label'),'Square A10');
+  assert.equal(await blue1.locator('#enemy button.cell[data-cell="9,9"]').getAttribute('aria-label'),'Square J1');
+  assert((await blue1.locator('#enemy button.cell').allInnerTexts()).every(text=>text===''||text==='▲'),'Empty enemy cells must not show coordinates');
   assert.equal((await blue1.locator('.axis-top').first().innerText()).replace(/\s+/g,''),'ABCDEFGHIJ');
-  assert.equal((await blue1.locator('.axis-left').first().innerText()).replace(/\s+/g,''),'12345678910');
+  assert.equal((await blue1.locator('.axis-left').first().innerText()).replace(/\s+/g,''),'10987654321');
+  assert.equal(await blue1.locator('#instruction').count(),0,'Yellow grid-shifting instruction must be gone');
+  assert.equal(await blue1.locator('#enemy .cell').count(),100,'Enemy board still has 100 cells');
   console.log('PASS Chromium: chess coordinates and YOUR TURN / ENEMY TURN banners');
   await red1.locator('#lock-mode').click();
   assert.equal(await red1.locator('#lock-mode').getAttribute('aria-checked'),'true');
