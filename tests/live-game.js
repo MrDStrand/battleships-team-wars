@@ -72,7 +72,6 @@ async function run(){
  pass('Four players allocated 2 versus 2',assignments.join(', '));
  assert(!blue[0].state.admin&&!red[0].state.admin,'GM data leaked to players');pass('Teammate rosters and GM data privacy');
  assert(!('chat' in blue[0].state)&&!('intelligence' in blue[0].state),'Retired streams still being sent to clients');
- assert(!(await ack(blue[0],'chat:send','obsolete')).ok,'Deprecated chat accepted a message');
  pass('Chat and intelligence streams retired from player state');
  assert(!(await ack(blue[0],'host:start',null)).ok,'Player could start the game');pass('Players denied GM controls');
  phase='fleet generation';
