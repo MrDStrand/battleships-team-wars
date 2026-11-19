@@ -49,6 +49,11 @@ async function main(){
   assert.equal(await blue1.locator('#enemy button.cell[data-cell="9,9"]').getAttribute('aria-label'),'Square J1');
   assert((await blue1.locator('#enemy button.cell').allInnerTexts()).every(text=>text===''||text==='▲'),'Empty enemy cells must not show coordinates');
   assert.equal((await blue1.locator('.axis-top').first().innerText()).replace(/\s+/g,''),'ABCDEFGHIJ');
+  for(const shell of await blue1.locator('.board-shell').all()){
+    const grid=await shell.locator('.board').boundingBox();
+    const letters=await shell.locator('.axis-top').boundingBox();
+    assert(grid&&letters&&letters.y>=grid.y+grid.height-1,'Letters should appear below the grid');
+  }
   assert.equal((await blue1.locator('.axis-left').first().innerText()).replace(/\s+/g,''),'10987654321');
   assert.equal(await blue1.locator('#instruction').count(),0,'Yellow grid-shifting instruction must be gone');
   assert.equal(await blue1.locator('#enemy .cell').count(),100,'Enemy board still has 100 cells');
