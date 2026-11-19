@@ -293,40 +293,16 @@ body.command-ui .system-readout span{color:#9cbdc9}
 body.command-ui .radar:not(.radar-operating) .radar-sweep{animation-play-state:paused;opacity:.32}
 body.command-ui .radar:not(.radar-operating) .radar-blip{animation-play-state:paused}
 
-/* Game Master may optionally take part as a normal voting player. */
-.gm-participation{margin:0 0 12px;background:linear-gradient(105deg,#102f43,#10283b);border-color:#317d94}
-.gm-participation-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.gm-participation-heading h3{margin:0 0 8px;color:#e8fcff}
-.gm-participation-heading>span{font-size:11px;color:#8eead4;font-family:monospace}
-.gm-player-form{display:flex;align-items:center;flex-wrap:wrap;gap:9px}
-.gm-player-form input{flex:1;min-width:160px;max-width:250px;padding:9px 11px;font-size:14px}
-.gm-player-form select{background:#071827;color:white;border:1px solid #40627c;border-radius:7px;padding:10px 12px;min-width:130px}
-.gm-player-form button{padding:10px 16px;background:#18a798}
-.gm-player-summary{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.gm-player-summary strong{font-size:14px;color:#7efad5}
-.gm-player-summary button{padding:7px 10px;background:#435c71;font-size:12px}
-.gm-fair-play{font-size:11px;margin:8px 0 0;color:#90b1c0}
-#host-player-error{font-size:12px;color:#e5c989;margin:7px 0 0}
-.gm-playing-panel{margin:0 0 12px;border-color:#2f9d8b;background:linear-gradient(115deg,#0b3044,#092334)}
-.gm-playing-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;flex-wrap:wrap}
-.gm-playing-header h3{margin:3px 0 0;color:#ecfcff}
-.gm-playing-header #host-player-turn{font-weight:900;font-size:14px;color:#9cffd0}
-.gm-playing-layout{display:grid;grid-template-columns:minmax(230px,460px) minmax(180px,1fr);gap:16px;align-items:center}
-.gm-playing-layout>.board-shell{max-width:480px;width:100%;margin:0}
-.gm-playing-controls{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin:0}
-.gm-playing-controls .mode-switch{width:154px;min-width:154px}
-.gm-playing-controls p{margin:0;font:12px monospace;color:#b7e5ed}
-.gm-playing-controls small{color:#8cabb9;font-size:11px;max-width:330px;line-height:1.5}
-#host-player-grid .cell{cursor:pointer}
-#host-player-grid .cell.selectable{border-color:#45cfda}
-#host-player-grid .cell.selectable:hover{background:#187895;border-color:#e0ffff}
-#host-player-grid .cell.locked-square{background:#667783;color:white}
-#host-player-grid.is-lock-mode .cell.lock-target:not(.locked-square){background:#b8c3ce!important;border:1px solid #d0d8df!important;outline:none!important;box-shadow:none!important;color:#263743!important}
-#host-player-grid .cell.hit{background:#b41f43;color:white}
-#host-player-grid .cell.miss{background:#9ab1bb;color:#122935}
-#host-player-grid .cell.sunk-ship{background:#88182d!important;color:white!important}
-#host-player-grid .cell.island{background:#697d52;color:#dbe9a6;cursor:not-allowed}
-@media(max-width:780px){.gm-playing-layout{grid-template-columns:1fr}.gm-playing-layout>.board-shell{margin:auto}.gm-playing-controls{flex-direction:row;flex-wrap:wrap;align-items:center}}
 
-/* Attribute-driven conditional Game Master panels must remain hidden despite flex/grid rules. */
-#host-player-form[hidden],#host-player-summary[hidden],#host-player-panel[hidden]{display:none!important}
+/* Game Master grid visibility; control and roster stay visible when grids are hidden. */
+.gm-display-controls{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:12px;background:#0e2d42;border:1px solid #317d94;padding:11px 13px;border-radius:10px}
+.gm-display-controls button{padding:9px 18px;background:#1e7896;border:1px solid #58b7ce;font-weight:900}
+.gm-display-controls button[aria-expanded="true"]{background:#455c70}
+#team-grid-status{font-size:12px;color:#b5d9e5}
+.gm-layout{grid-template-columns:minmax(0,1fr) minmax(245px,.4fr)}
+.gm-team-grids{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0}
+.gm-team-grids[hidden]{display:none!important}
+.gm-layout.grids-hidden{grid-template-columns:minmax(0,1fr)}
+.gm-layout.grids-hidden>aside.panel{width:100%;max-width:none}
+@media(max-width:1000px){.gm-layout{grid-template-columns:1fr}.gm-team-grids{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:580px){.gm-team-grids{grid-template-columns:1fr}}
