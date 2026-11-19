@@ -17,9 +17,10 @@ async function ack(sock,event,data){
 }
 async function main(){
  assert(secret,'Temporary test HOST_KEY is required');
- let browser,host,pages=[];
+ let browser,host,hostState=null,pages=[];
  try{
   host=io(URL,{reconnection:false,transports:['websocket']});
+  host.on('state',value=>{hostState=value});
   await new Promise((resolve,reject)=>{host.once('connect',resolve);host.once('connect_error',reject)});
   await ack(host,'host:auth',secret);
   await ack(host,'host:reset',null);
@@ -66,6 +67,45 @@ async function main(){
   await blue2.locator('#enemy button.cell[data-cell="0,0"]').click();
   await blue1.locator('#enemy button.cell[data-cell="0,0"].hit, #enemy button.cell[data-cell="0,0"].miss').first().waitFor({timeout:8000});
   console.log('PASS Chromium: ordinary clicks still cast attack votes and resolve a majority');
+  // Continue a complete browser match to verify both sides see the correct final result.
+  await red1.locator('#lock-mode').click();
+  await red2.locator('#lock-mode').click();
+  const targetCells=hostState.admin.Red.ships.flatMap(ship=>ship.cells);
+  const ownShipCells=new Set(hostState.admin.Blue.ships.flatMap(ship=>ship.cells));
+  const enemyIslands=new Set(hostState.admin.Blue.islands);
+  const allCells=Array.from({length:100},(_,i)=>Math.floor(i/10)+','+(i%10));
+  async function votePair(a,b,team,cell){
+   const locator='#enemy button.cell[data-cell="'+cell+'"]';
+   await a.locator(locator).click();
+   await b.locator(locator).click();
+   const deadline=Date.now()+10000;
+   while(Date.now()<deadline){
+    if(hostState?.admin?.[team]?.shots?.includes(cell))return;
+    await new Promise(resolve=>setTimeout(resolve,40));
+   }
+   throw Error('Browser votes did not fire '+team+' at '+cell);
+  }
+  for(const cell of targetCells){
+   if(hostState.phase==='finished')break;
+   if(!hostState.admin.Blue.shots.includes(cell)){
+    if(hostState.turn==='Red'){
+     const miss=allCells.find(c=>!ownShipCells.has(c)&&!enemyIslands.has(c)&&!hostState.admin.Red.shots.includes(c));
+     assert(miss,'No safe Red miss remaining');
+     await votePair(red1,red2,'Red',miss);
+    }
+    await votePair(blue1,blue2,'Blue',cell);
+   }
+  }
+  assert.equal(hostState.phase,'finished','Browser-driven game should reach victory');
+  assert.equal(hostState.winner,'Blue','Expected Blue to win browser match');
+  await blue1.locator('#endgame.victory').waitFor({state:'visible',timeout:10000});
+  await red1.locator('#endgame.defeat').waitFor({state:'visible',timeout:10000});
+  assert.match(await blue1.locator('#endgame-title').innerText(),/YOU WIN/);
+  assert.match(await red1.locator('#endgame-title').innerText(),/YOUR FLEET IS SUNK/);
+  assert(await blue1.locator('#endgame-effects .firework').count()>=10,'Winner fireworks missing');
+  assert(await red1.locator('#endgame-effects .pirate-flag').count()>=1,'Loser pirate flags missing');
+  console.log('PASS Chromium: final victory shows fireworks and explosions; defeat shows pirate skull flags');
+
  }catch(e){
   if(pages[0])try{await pages[0].screenshot({path:path.join(__dirname,'browser-lock-failure.png'),fullPage:true})}catch{}
   throw e;
