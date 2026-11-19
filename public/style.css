@@ -284,3 +284,11 @@ body.command-ui{background:#04111e;color:#e8f5ff;min-height:100vh;background-ima
  .radar-sweep,.radar-blip,.live-dot{animation:none!important}
  .radar-sweep{transform:rotate(45deg)}
 }
+
+/* Contain legacy header span styles within the new masthead. */
+body.command-ui header.command-header span{margin-left:0}
+body.command-ui header.command-header .brand-icon{color:#5cecf1}
+body.command-ui header.command-header .live-dot{background:#27e9b8}
+body.command-ui .system-readout span{color:#9cbdc9}
+body.command-ui .radar:not(.radar-operating) .radar-sweep{animation-play-state:paused;opacity:.32}
+body.command-ui .radar:not(.radar-operating) .radar-blip{animation-play-state:paused}
