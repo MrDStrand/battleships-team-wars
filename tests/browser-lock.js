@@ -40,6 +40,13 @@ async function main(){
   assert.equal(await blue1.locator('#own button.cell').count(),100,'Blue own grid must have 100 cells');
   assert.equal(await red1.locator('#enemy button.cell').count(),100,'Red enemy grid must have 100 cells');
   console.log('PASS Chromium: both grids render exactly 100 squares');
+  assert.equal(await blue1.locator('.radar-sweep').count(),1,'Animated radar sweep element missing');
+  assert.equal(await blue1.locator('#radar-points').count(),1,'Radar contact layer missing');
+  assert.equal(await blue1.locator('#chat-form').count(),0,'Retired chat still visible');
+  assert.equal(await blue1.locator('#intelligence').count(),0,'Retired intelligence still visible');
+  assert.equal(await blue1.locator('.radar-sweep').evaluate(el=>getComputedStyle(el).animationName),'sonar-spin','Radar sweep should spin during active gameplay');
+  console.log('PASS Chromium: live animated sonar, no chat or intelligence panels');
+
   // Blue attacks first: Red must be able to lock, without being allowed to vote.
   await red1.waitForFunction(()=>document.getElementById('turn').textContent.includes('ENEMY TURN'));
   await blue1.waitForFunction(()=>document.getElementById('turn').textContent.includes('YOUR TURN'));
@@ -77,6 +84,12 @@ async function main(){
   await blue2.locator('#enemy button.cell[data-cell="0,0"]').click();
   await blue1.locator('#enemy button.cell[data-cell="0,0"].hit, #enemy button.cell[data-cell="0,0"].miss').first().waitFor({timeout:8000});
   console.log('PASS Chromium: ordinary clicks still cast attack votes and resolve a majority');
+  await blue1.locator('#radar-points .radar-blip.outgoing').first().waitFor({timeout:8000});
+  await red1.locator('#radar-points .radar-blip.incoming').first().waitFor({timeout:8000});
+  await blue1.locator('#history .battle-event').first().waitFor({timeout:8000});
+  assert.match(await blue1.locator('#history .battle-event .event-time').first().innerText(),/^\\d{2}:\\d{2}:\\d{2}$/,'Battle event missing time');
+  console.log('PASS Chromium: radar plots confirmed attacks and battle results include HH:MM:SS');
+
   // Continue a complete browser match to verify both sides see the correct final result.
   await red1.locator('#lock-mode').click();
   await red2.locator('#lock-mode').click();
