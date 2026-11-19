@@ -41,6 +41,8 @@ async function main(){
   assert.equal(await red1.locator('#enemy button.cell').count(),100,'Red enemy grid must have 100 cells');
   console.log('PASS Chromium: both grids render exactly 100 squares');
   // Blue attacks first: Red must be able to lock, without being allowed to vote.
+  await red1.waitForFunction(()=>document.getElementById('turn').textContent.includes('ENEMY TURN'));
+  await blue1.waitForFunction(()=>document.getElementById('turn').textContent.includes('YOUR TURN'));
   assert.match(await red1.locator('#turn').innerText(),/ENEMY TURN/);
   assert.match(await blue1.locator('#turn').innerText(),/YOUR TURN/);
   assert.equal(await blue1.locator('#enemy button.cell[data-cell="0,0"]').innerText(),'A1');
