@@ -57,3 +57,11 @@ The authenticated Game Master dashboard is **observer-only** and cannot join eit
 - Revealing the grids does not alter any game state. It changes the authenticated host interface only, never player views or the server's fleet rules.
 - Hidden grids remain private Game Master data behind the existing HOST_KEY authentication; hiding them is a display preference, not an additional security boundary.
 - The isolated Chromium test checks that the grids can be shown/hidden and that administration remains available; the multiplayer test checks that the Game Master cannot cast votes as a player.
+
+## Sonar sweep and ping
+
+The tactical radar continuously sweeps clockwise during active battles (one revolution every 4.5 seconds). A visual echo ring radiates from its center once per revolution, and confirmed incoming/outgoing shots remain plotted as pulsing contacts. It does **not** reveal hidden enemy ships. The radar pauses when the game is not in battle.
+
+- Sound is muted by default. A player can press **ENABLE PING** in their radar panel to permit a low-volume synthesized sonar tone.
+- The Web Audio sound is generated locally, after a deliberate user click; it is never streamed, auto-played on initial load, or sent to other players. After activation the sonar chirps occasionally, roughly every 9–14 seconds, and can be muted at any time.
+- The visual echo respects the system's reduced-motion setting and audio does not play while the tab is hidden or the battle is inactive.
