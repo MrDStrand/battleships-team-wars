@@ -44,8 +44,8 @@ async function main(){
   assert.match(await blue1.locator('#turn').innerText(),/YOUR TURN/);
   assert.equal(await blue1.locator('#enemy button.cell[data-cell="0,0"]').innerText(),'A1');
   assert.equal(await blue1.locator('#enemy button.cell[data-cell="9,9"]').innerText(),'J10');
-  assert.equal((await blue1.locator('.axis-top').first().innerText()).replace(/\\s+/g,''),'ABCDEFGHIJ');
-  assert.equal((await blue1.locator('.axis-left').first().innerText()).replace(/\\s+/g,''),'12345678910');
+  assert.equal((await blue1.locator('.axis-top').first().innerText()).replace(/\s+/g,''),'ABCDEFGHIJ');
+  assert.equal((await blue1.locator('.axis-left').first().innerText()).replace(/\s+/g,''),'12345678910');
   console.log('PASS Chromium: chess coordinates and YOUR TURN / ENEMY TURN banners');
   await red1.locator('#lock-mode').click();
   assert.equal(await red1.locator('#lock-mode').getAttribute('aria-checked'),'true');
