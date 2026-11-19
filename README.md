@@ -60,7 +60,7 @@ The authenticated Game Master dashboard is **observer-only** and cannot join eit
 
 ## Sonar sweep and ping
 
-The tactical radar continuously sweeps clockwise during active battles (one revolution every 4.5 seconds). A visual echo ring radiates from its center once per revolution, and confirmed incoming/outgoing shots remain plotted as pulsing contacts. It does **not** reveal hidden enemy ships. The radar pauses when the game is not in battle.
+The tactical radar continuously sweeps clockwise during active battles (one revolution every 4.5 seconds). A visual echo ring radiates from its center once per revolution, and confirmed incoming/outgoing shots remain plotted as pulsing contacts. It does **not** reveal hidden enemy ships. The visible sweep keeps rotating while a player is in the dashboard, including before a match starts. Echo pulses and audible pings remain reserved for active battles.
 
 - Sound is muted by default. A player can press **ENABLE PING** in their radar panel to permit a low-volume synthesized sonar tone.
 - The Web Audio sound is generated locally, after a deliberate user click; it is never streamed, auto-played on initial load, or sent to other players. After activation the sonar chirps occasionally, roughly every 9–14 seconds, and can be muted at any time.
