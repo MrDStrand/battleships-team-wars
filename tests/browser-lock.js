@@ -27,6 +27,37 @@ async function main(){
   await ack(host,'host:remove-all',null);
   browser=await chromium.launch({headless:true});
   const ctx=await browser.newContext({viewport:{width:1440,height:900}});
+  // Exercise the authenticated Game Master player controls in an actual browser.
+  const gmPage=await ctx.newPage();pages.push(gmPage);
+  await gmPage.goto(URL+'/host.html',{waitUntil:'domcontentloaded'});
+  await gmPage.locator('#key').fill(secret);
+  await gmPage.locator('#auth button').click();
+  await gmPage.locator('#dashboard').waitFor({state:'visible',timeout:8000});
+  await gmPage.locator('#host-player-name').fill('GM Browser');
+  await gmPage.locator('#host-player-team').selectOption('Blue');
+  await gmPage.locator('#host-player-form button').click();
+  await gmPage.locator('#host-player-panel').waitFor({state:'visible',timeout:8000});
+  assert.equal(await gmPage.locator('#host-player-grid .cell').count(),100,'GM participation grid should have 100 squares');
+  assert.equal(await gmPage.locator('#reset').isVisible(),true,'Host lost administrator controls while playing');
+  const opponent=await ctx.newPage();pages.push(opponent);
+  await opponent.goto(URL,{waitUntil:'domcontentloaded'});
+  await opponent.locator('#name').fill('GM Opponent');
+  await opponent.locator('#join button').click();
+  await opponent.locator('#dashboard').waitFor({state:'visible',timeout:8000});
+  await ack(host,'host:start',null);
+  await gmPage.locator('#host-player-grid .cell.selectable').first().click();
+  await gmPage.waitForFunction(()=>document.getElementById('host-player-turn').textContent.includes('ENEMY TURN'));
+  assert(hostState.events.some(e=>e.team==='Blue'),'Host did not cast an attack vote from the Game Master interface');
+  await ack(host,'host:reset',null);
+  gmPage.once('dialog',dialog=>dialog.accept());
+  await gmPage.locator('#host-player-leave').click();
+  // Browser dialogs are handled by the explicit handler for the Leave confirmation.
+  await gmPage.locator('#host-player-form').waitFor({state:'visible',timeout:8000});
+  assert.equal(await gmPage.locator('#dashboard').isVisible(),true,'Host dashboard closed after leaving player role');
+  await ack(host,'host:remove-all',null);
+  await gmPage.close();await opponent.close();
+  pages=[];
+  console.log('PASS Chromium: authenticated GM joins as player, votes, leaves and keeps host controls');
   for(const name of ['BrowserBlue1','BrowserRed1','BrowserBlue2','BrowserRed2']){
    const p=await ctx.newPage();pages.push(p);
    await p.goto(URL,{waitUntil:'domcontentloaded'});
