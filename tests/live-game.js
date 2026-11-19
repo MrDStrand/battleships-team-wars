@@ -174,7 +174,7 @@ async function run(){
  assert(host.state.events.every(x=>Number.isInteger(x.time)&&x.time>0),'Battle event timestamp missing');
  const events=host.state.events;
  assert(events.some(x=>x.result==='MISS')&&events.some(x=>x.result==='SUNK'),'Missing hit/miss/sunk events');
- assert(events.every(x=>/^\\d,\\d$/.test(x.cell)),'Battle event coordinates invalid');
+ assert(events.every(x=>/^\d,\d$/.test(x.cell)),'Battle event coordinates invalid');
  pass('Battle log records timestamps for misses, hits and sunk ships');
 }
 (async()=>{try{await run()}catch(e){test.push({name:'Interrupted during '+phase,status:'FAIL',detail:String(e.message||e)});console.error('FAIL '+String(e.message||e));process.exitCode=1}finally{const result={target:url,date:new Date().toISOString(),phase:host?.state?.phase||phase,passed:test.filter(t=>t.status==='PASS').length,failed:test.filter(t=>t.status==='FAIL').length,attacks,duration_seconds:Math.round((Date.now()-started)/1000),tests:test,note:'Isolated GitHub Actions Socket.IO integration test against a temporary local server using the current repository code. NOT a test of deployed Render, nor a visual browser test.'};fs.writeFileSync(reportFile,JSON.stringify(result,null,2));console.log('RESULT '+result.passed+' passed, '+result.failed+' failed');console.log('REPORT '+reportFile);clients.forEach(p=>p.sock.disconnect())}})();
