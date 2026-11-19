@@ -30,7 +30,8 @@ These controls are server-authorized using the existing `HOST_KEY`. Player IDs u
 
 ## Coordinates, turn status and endgame screens
 
-- All 10x10 boards now use chess-style coordinate labels: letters **A–J** increase left to right; numbers **1–10** increase top to bottom. For example, the top-right square is **J1** and the bottom-left is **A10**. Attack log coordinates follow the same convention.
+- All 10x10 boards use chess-style **external-only** coordinate labels: letters **A–J** increase left to right; numbers **10–1** descend from top to bottom. The top-left square is **A10**, the bottom-right is **J1**. Empty grid squares contain no coordinate text; their coordinates remain available to screen readers and on hover. Attack logs follow the same convention.
+- The redundant yellow **Vote for attack target** text was removed so it cannot push the Enemy Waters grid sideways. Voting status now stays under that grid.
 - Players see **YOU / ENEMY** battle status and a prominent **YOUR TURN / ENEMY TURN** banner rather than Blue/Red battle labels. Blue and Red remain internal identifiers and remain visible on the GM screen for team administration.
 - At game end, players on the winning team see an animated fireworks/explosion **YOU WIN!** screen. Players on the losing team see a skull-and-crossbones pirate flag **YOUR FLEET IS SUNK** defeat screen. Both have a **View battlefield** button; reduced-motion preferences disable the animation.
 - The underlying server-authoritative ship, voting, locking and victory rules remain unchanged.
