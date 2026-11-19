@@ -102,7 +102,7 @@
 #enemy.board .cell.sunk-ship.ship-hull{font-size:clamp(13px,1.45vw,24px)!important}
 
 /* Chess-style coordinates: letters across the top, numbers down the left. */
-.board-shell{display:grid;grid-template-columns:19px minmax(0,1fr);grid-template-rows:18px auto;grid-template-areas:". col" "row grid";gap:2px;width:100%;max-width:665px;margin:0 auto}
+.board-shell{display:grid;grid-template-columns:19px minmax(0,1fr);grid-template-rows:auto 18px;grid-template-areas:"row grid" ". col";gap:2px;width:100%;max-width:665px;margin:0 auto}
 .board-shell>.axis-top{grid-area:col;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));align-items:center}
 .board-shell>.axis-left{grid-area:row;display:grid;grid-template-rows:repeat(10,minmax(0,1fr));align-items:center}
 .board-shell>.axis-top span,.board-shell>.axis-left span{font-size:11px;font-weight:900;color:#a9cee3;text-align:center;line-height:1}
