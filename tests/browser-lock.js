@@ -76,6 +76,8 @@ async function main(){
   const allCells=Array.from({length:100},(_,i)=>Math.floor(i/10)+','+(i%10));
   async function votePair(a,b,team,cell){
    const locator='#enemy button.cell[data-cell="'+cell+'"]';
+   await a.waitForFunction(()=>document.getElementById('turn').textContent.includes('YOUR TURN'));
+   await b.waitForFunction(()=>document.getElementById('turn').textContent.includes('YOUR TURN'));
    await a.locator(locator).click();
    await b.locator(locator).click();
    const deadline=Date.now()+10000;
