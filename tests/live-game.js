@@ -81,11 +81,12 @@ async function run(){
  await ok(host,'host:pause',null);await wait(()=>host.state.phase==='paused','GM can pause while participating');
  await ok(host,'host:resume',null);await wait(()=>host.state.phase==='battle','GM can resume while participating');
  pass('Host vote counted; Game Master pause/resume controls retained');
- await ok(host,'host:reset',null);
  await ok(host,'host:leave-player',null);
  await wait(()=>host.state?.host&&!host.state?.me,'Host returns to administration-only state');
+ assert(host.state.phase==='battle','Leaving player role interrupted the ongoing match');
  assert(host.sock.connected,'Leaving player role disconnected Game Master');
  assert(!(await ack(host,'player:resume',hostJoined.token)).ok,'Old host player token remained valid after leave');
+ await ok(host,'host:reset',null);
  await ok(host,'host:remove-all',null);
  await wait(()=>host.state.teams.Blue.players.length===0&&host.state.teams.Red.players.length===0,'Participation test cleanup');
  pass('Host can leave player role and retain GM login and controls');
