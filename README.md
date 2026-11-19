@@ -48,13 +48,12 @@ The player interface uses an immersive, responsive tactical command-center layou
 
 The design deliberately uses CSS/SVG-style elements rather than external art services or trackers. No secrets are included in the repository.
 
-## Game Master as an optional player
+## Game Master grid visibility
 
-The authenticated **Game Master screen** includes a **Join the battle (optional)** panel. Before the game starts, the host can enter a callsign, select **Blue** or **Red**, and choose **Join as Player**. The host's player account counts as one normal member of that team, including the usual majority threshold and one vote per eligible player.
+The authenticated Game Master dashboard is **observer-only** and cannot join either team, vote, or lock attack squares. The old Game Master player registration and player station have been removed from both the interface and server.
 
-- A dedicated **Enemy Waters** panel appears on the Game Master page, with its own 10×10 attack grid and Vote/Lock switch. The host can vote on their team's turn, and lock or unlock team-shared squares even during the enemy's turn.
-- **All Game Master controls remain available** while participating. Joining is optional and permitted only in the lobby; leaving the player role is supported at any time without disconnecting the Game Master.
-- The host player identity is stored locally as a session token so it can be resumed after signing back in to the Game Master screen. Resume of a host-player token is restricted to an authenticated Game Master socket.
-- Joining/playing/leaving and authorization are enforced by the server. Other players never receive private Game Master ship data.
-- **Fair play:** the Game Master can see both teams' hidden fleet positions. Participants who also host are responsible for not using that privileged information when voting; the system does not claim to conceal data from the host.
-- The isolated multiplayer suite and Chromium browser test cover authenticated joining, vote counting, no duplicate host registrations, player departure without losing admin access, and denial of host-player tokens to unauthenticated connections.
+- The **Show team grids / Hide team grids** button controls the visibility of the Blue and Red fleet grids, which are **hidden by default**.
+- When the grids are hidden, the Game Master still has full access to **Start, Pause, Resume, Reset**, **Kick**, **Clear disconnected**, **Remove all players**, the player roster, and the timestamped battle log.
+- Revealing the grids does not alter any game state. It changes the authenticated host interface only, never player views or the server's fleet rules.
+- Hidden grids remain private Game Master data behind the existing HOST_KEY authentication; hiding them is a display preference, not an additional security boundary.
+- The isolated Chromium test checks that the grids can be shown/hidden and that administration remains available; the multiplayer test checks that the Game Master cannot cast votes as a player.
