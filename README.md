@@ -27,3 +27,10 @@ These controls are server-authorized using the existing `HOST_KEY`. Player IDs u
 - **Recommended method:** click the two-position **VOTE / LOCK** switch above Enemy waters to enable **LOCK MODE ON**. Click or tap any unshot non-island square to lock/unlock, including during the other team's turn. Flip the switch back to VOTE to return to voting. A normal click votes only in Vote mode and only on your team's turn. Shift-click/right-click remain optional shortcuts.
 - The grid uses persistent delegated event handlers rather than attaching a handler to each square after every redraw, and the frontend assets have versioned URLs to prevent stale cached scripts.
 - When every square of an enemy ship has been hit, **all its segments become a connected crimson hull** on the enemy board. The server reveals only fully sunk ships, not undiscovered ship positions. Hover a sunk segment to see the ship name.
+
+## Coordinates, turn status and endgame screens
+
+- All 10x10 boards now use chess-style coordinate labels: letters **A–J** increase left to right; numbers **1–10** increase top to bottom. For example, the top-right square is **J1** and the bottom-left is **A10**. Attack log coordinates follow the same convention.
+- Players see **YOU / ENEMY** battle status and a prominent **YOUR TURN / ENEMY TURN** banner rather than Blue/Red battle labels. Blue and Red remain internal identifiers and remain visible on the GM screen for team administration.
+- At game end, players on the winning team see an animated fireworks/explosion **YOU WIN!** screen. Players on the losing team see a skull-and-crossbones pirate flag **YOUR FLEET IS SUNK** defeat screen. Both have a **View battlefield** button; reduced-motion preferences disable the animation.
+- The underlying server-authoritative ship, voting, locking and victory rules remain unchanged.
