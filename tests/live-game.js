@@ -71,9 +71,9 @@ async function run(){
  await wait(()=>blue.every(p=>p.state.teams.Blue.players.length===2)&&red.every(p=>p.state.teams.Red.players.length===2),'rosters synchronized');
  pass('Four players allocated 2 versus 2',assignments.join(', '));
  assert(!blue[0].state.admin&&!red[0].state.admin,'GM data leaked to players');pass('Teammate rosters and GM data privacy');
- await ok(blue[0],'chat:send','Blue-only integration test');
- await wait(()=>blue[1].state?.chat?.some(x=>x.text==='Blue-only integration test'),'Blue private chat');
- assert(!red[0].state.chat.some(x=>x.text==='Blue-only integration test'),'Private chat leaked');pass('Team-private chat');
+ assert(!('chat' in blue[0].state)&&!('intelligence' in blue[0].state),'Retired streams still being sent to clients');
+ assert(!(await ack(blue[0],'chat:send','obsolete')).ok,'Deprecated chat accepted a message');
+ pass('Chat and intelligence streams retired from player state');
  assert(!(await ack(blue[0],'host:start',null)).ok,'Player could start the game');pass('Players denied GM controls');
  phase='fleet generation';
  await ok(host,'host:start',null);
@@ -102,8 +102,9 @@ async function run(){
  assert(host.state.turn==='Blue','Blue must attack first');pass('Automatic battle start and Blue first');
  assert(!blue[0].state.board.ships.some(x=>!x.cells?.length),'Blue should see its own ships');
  assert(!blue[0].state.board.enemyShips,'Enemy ship data leaked');pass('Own ships visible and enemy ships hidden');
- await wait(()=>blue[0].state?.intelligence?.length&&red[0].state?.intelligence?.length,'initial intelligence');
- assert(!blue[0].state.admin&&!red[0].state.admin,'Player received GM-only data');pass('Team intelligence and secrecy');
+ assert(!blue[0].state.admin&&!red[0].state.admin,'Player received GM-only data');
+ assert(!('intelligence' in host.state),'Retired intelligence leaked into GM state');
+ pass('GM-only ship secrecy and removed intelligence');
  phase='battle';
  await ok(host,'host:pause',null);await wait(()=>host.state?.phase==='paused','pause');
  assert(!(await ack(blue[0],'vote','0,0')).ok,'Vote accepted while paused');
@@ -169,6 +170,11 @@ async function run(){
  }
  await wait(()=>host.state?.phase==='finished','victory',18000);
  assert(host.state.winner==='Blue','Unexpected winner '+host.state.winner);pass('Full game reaches Blue victory',String(attacks)+' attacks');
- assert(blue[0].state.intelligence.length>1,'Intelligence was not refreshed');pass('Intelligence refreshed during play');
+ assert(blue[0].state.events.some(x=>x.team==='Blue'&&x.result==='HIT'),'Timestamped hit events missing');
+ assert(host.state.events.every(x=>Number.isInteger(x.time)&&x.time>0),'Battle event timestamp missing');
+ const events=host.state.events;
+ assert(events.some(x=>x.result==='MISS')&&events.some(x=>x.result==='SUNK'),'Missing hit/miss/sunk events');
+ assert(events.every(x=>/^\\d,\\d$/.test(x.cell)),'Battle event coordinates invalid');
+ pass('Battle log records timestamps for misses, hits and sunk ships');
 }
 (async()=>{try{await run()}catch(e){test.push({name:'Interrupted during '+phase,status:'FAIL',detail:String(e.message||e)});console.error('FAIL '+String(e.message||e));process.exitCode=1}finally{const result={target:url,date:new Date().toISOString(),phase:host?.state?.phase||phase,passed:test.filter(t=>t.status==='PASS').length,failed:test.filter(t=>t.status==='FAIL').length,attacks,duration_seconds:Math.round((Date.now()-started)/1000),tests:test,note:'Isolated GitHub Actions Socket.IO integration test against a temporary local server using the current repository code. NOT a test of deployed Render, nor a visual browser test.'};fs.writeFileSync(reportFile,JSON.stringify(result,null,2));console.log('RESULT '+result.passed+' passed, '+result.failed+' failed');console.log('REPORT '+reportFile);clients.forEach(p=>p.sock.disconnect())}})();
