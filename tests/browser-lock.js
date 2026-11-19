@@ -27,37 +27,27 @@ async function main(){
   await ack(host,'host:remove-all',null);
   browser=await chromium.launch({headless:true});
   const ctx=await browser.newContext({viewport:{width:1440,height:900}});
-  // Exercise the authenticated Game Master player controls in an actual browser.
+  // Game Master is an observer: fleet grids are hidden by default and may be revealed.
   const gmPage=await ctx.newPage();pages.push(gmPage);
   await gmPage.goto(URL+'/host.html',{waitUntil:'domcontentloaded'});
   await gmPage.locator('#key').fill(secret);
   await gmPage.locator('#auth button').click();
   await gmPage.locator('#dashboard').waitFor({state:'visible',timeout:8000});
-  await gmPage.locator('#host-player-name').fill('GM Browser');
-  await gmPage.locator('#host-player-team').selectOption('Blue');
-  await gmPage.locator('#host-player-form button').click();
-  await gmPage.locator('#host-player-panel').waitFor({state:'visible',timeout:8000});
-  assert.equal(await gmPage.locator('#host-player-grid .cell').count(),100,'GM participation grid should have 100 squares');
-  assert.equal(await gmPage.locator('#reset').isVisible(),true,'Host lost administrator controls while playing');
-  const opponent=await ctx.newPage();pages.push(opponent);
-  await opponent.goto(URL,{waitUntil:'domcontentloaded'});
-  await opponent.locator('#name').fill('GM Opponent');
-  await opponent.locator('#join button').click();
-  await opponent.locator('#dashboard').waitFor({state:'visible',timeout:8000});
-  await ack(host,'host:start',null);
-  await gmPage.locator('#host-player-grid .cell.selectable').first().click();
-  await gmPage.waitForFunction(()=>document.getElementById('host-player-turn').textContent.includes('ENEMY TURN'));
-  assert(hostState.events.some(e=>e.team==='Blue'),'Host did not cast an attack vote from the Game Master interface');
-  await ack(host,'host:reset',null);
-  gmPage.once('dialog',dialog=>dialog.accept());
-  await gmPage.locator('#host-player-leave').click();
-  // Browser dialogs are handled by the explicit handler for the Leave confirmation.
-  await gmPage.locator('#host-player-form').waitFor({state:'visible',timeout:8000});
-  assert.equal(await gmPage.locator('#dashboard').isVisible(),true,'Host dashboard closed after leaving player role');
-  await ack(host,'host:remove-all',null);
-  await gmPage.close();await opponent.close();
-  pages=[];
-  console.log('PASS Chromium: authenticated GM joins as player, votes, leaves and keeps host controls');
+  assert.equal(await gmPage.locator('#host-team-grids').isVisible(),false,'GM ship grids should start hidden');
+  assert.equal(await gmPage.locator('#start').isVisible(),true,'Start control should remain visible');
+  assert.equal(await gmPage.locator('#pause').isVisible(),true,'Pause control should remain visible');
+  assert.equal(await gmPage.locator('#reset').isVisible(),true,'Reset control should remain visible');
+  assert.equal(await gmPage.locator('#clear-disconnected').isVisible(),true,'Player cleanup should remain visible');
+  assert.equal(await gmPage.locator('#host-player-form').count(),0,'GM player registration should be removed');
+  await gmPage.locator('#toggle-team-grids').click();
+  assert.equal(await gmPage.locator('#host-team-grids').isVisible(),true,'GM grids did not reveal');
+  assert.equal(await gmPage.locator('#blue .cell').count(),100,'Blue grid should retain 100 squares');
+  assert.equal(await gmPage.locator('#red .cell').count(),100,'Red grid should retain 100 squares');
+  await gmPage.locator('#toggle-team-grids').click();
+  assert.equal(await gmPage.locator('#host-team-grids').isVisible(),false,'GM grids did not hide');
+  assert.equal(await gmPage.locator('#players').isVisible(),true,'GM player management disappeared after hiding grids');
+  await gmPage.close();pages=[];
+  console.log('PASS Chromium: GM toggles private fleet grids while start/stop and roster tools remain visible');
   for(const name of ['BrowserBlue1','BrowserRed1','BrowserBlue2','BrowserRed2']){
    const p=await ctx.newPage();pages.push(p);
    await p.goto(URL,{waitUntil:'domcontentloaded'});
