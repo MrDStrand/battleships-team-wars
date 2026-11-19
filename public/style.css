@@ -327,3 +327,6 @@ body.command-ui .radar:not(.radar-operating) .radar-blip{animation-play-state:pa
 #host-player-grid .cell.sunk-ship{background:#88182d!important;color:white!important}
 #host-player-grid .cell.island{background:#697d52;color:#dbe9a6;cursor:not-allowed}
 @media(max-width:780px){.gm-playing-layout{grid-template-columns:1fr}.gm-playing-layout>.board-shell{margin:auto}.gm-playing-controls{flex-direction:row;flex-wrap:wrap;align-items:center}}
+
+/* Attribute-driven conditional Game Master panels must remain hidden despite flex/grid rules. */
+#host-player-form[hidden],#host-player-summary[hidden],#host-player-panel[hidden]{display:none!important}
