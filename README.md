@@ -65,3 +65,14 @@ The tactical radar continuously sweeps clockwise during active battles (one revo
 - Sound is muted by default. A player can press **ENABLE PING** in their radar panel to permit a low-volume synthesized sonar tone.
 - The Web Audio sound is generated locally, after a deliberate user click; it is never streamed, auto-played on initial load, or sent to other players. After activation the sonar chirps occasionally, roughly every 9–14 seconds, and can be muted at any time.
 - The visual echo respects the system's reduced-motion setting and audio does not play while the tab is hidden or the battle is inactive.
+
+## Shared battle-result audio
+
+Whenever a server-confirmed attack resolves, **all connected players on both teams and the Game Master** receive a short sound effect:
+
+- **HIT** or **SUNK**: a short, layered explosion (noise crackle plus bass thump).
+- **MISS**: a fast falling whistle and filtered-air swoosh, like a passing projectile.
+- These sounds are synthesized locally via the Web Audio API in `public/battle-audio.js` and do not require external sound files, a CDN, or any additional server events.
+- Battle effects are **enabled by default** but browsers require a first user interaction (such as entering the game or signing in) before audio can start. A separate **BATTLE FX ON/OFF** control is available on player and Game Master screens, with the mute preference saved locally. Sonar ping remains separately opt-in.
+- Sound events are derived only from the timestamped, server-authoritative public battle-event stream. Previously recorded events are not replayed on reconnect; there is no sound on vote changes or locks, only when shots resolve.
+- Muting affects only that browser; it does not disable effects for teammates or opponents. Browser/device sound restrictions can still prevent playback.
