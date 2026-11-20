@@ -39,6 +39,9 @@ async function main(){
   assert.equal(await gmPage.locator('#reset').isVisible(),true,'Reset control should remain visible');
   assert.equal(await gmPage.locator('#clear-disconnected').isVisible(),true,'Player cleanup should remain visible');
   assert.equal(await gmPage.locator('#host-player-form').count(),0,'GM player registration should be removed');
+  assert.equal(await gmPage.locator('#battle-sound').getAttribute('aria-pressed'),'true','GM battle sound defaults to on');
+  assert.equal(await gmPage.evaluate(()=>typeof window.BattleAudio?.observe),'function','GM battle audio runtime missing');
+
   await gmPage.locator('#toggle-team-grids').click();
   assert.equal(await gmPage.locator('#host-team-grids').isVisible(),true,'GM grids did not reveal');
   assert.equal(await gmPage.locator('#blue .cell').count(),100,'Blue grid should retain 100 squares');
@@ -70,6 +73,17 @@ async function main(){
   assert.equal(await blue1.locator('#own button.cell').count(),100,'Blue own grid must have 100 cells');
   assert.equal(await red1.locator('#enemy button.cell').count(),100,'Red enemy grid must have 100 cells');
   console.log('PASS Chromium: both grids render exactly 100 squares');
+  for(const page of [blue1,red1,blue2,red2]){
+    assert.equal(await page.locator('#battle-sound').getAttribute('aria-pressed'),'true','Battle effects should default on for all players');
+    assert.equal(await page.evaluate(()=>typeof window.BattleAudio?.observe),'function','Player battle-audio runtime missing');
+  }
+  await blue1.locator('#battle-sound').click();
+  assert.equal(await blue1.locator('#battle-sound').getAttribute('aria-pressed'),'false','Player must be able to mute explosions and misses');
+  await blue1.locator('#battle-sound').click();
+  assert.equal(await blue1.locator('#battle-sound').getAttribute('aria-pressed'),'true','Player must be able to restore sound');
+  assert.equal(await blue1.locator('#radar-sound').getAttribute('aria-pressed'),'false','Battle sounds must be independent of sonar sounds');
+  console.log('PASS Chromium: battle effects enabled for both teams, independent toggle and Game Master control');
+
   assert.equal(await blue1.locator('.radar-sweep').count(),1,'Animated radar sweep element missing');
   assert.equal(await blue1.locator('#radar-points').count(),1,'Radar contact layer missing');
   assert.equal(await blue1.locator('#radar-pings').count(),1,'Sonar echo layer missing');
