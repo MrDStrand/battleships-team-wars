@@ -43,7 +43,8 @@ $('enemy').addEventListener('contextmenu',e=>{
 socket.on('connect',()=>{if(token)socket.emit('player:resume',token,r=>{if(!r?.ok){token=null;sessionStorage.removeItem('battleships-token');$('error').textContent='Your previous session ended. Enter your name to join again.';}});});
 socket.on('disconnect',reason=>{if(reason==='io server disconnect'&&!token)socket.connect();});
 socket.on('player:kicked',data=>{token=null;sessionStorage.removeItem('battleships-token');state=null;$('login').hidden=false;$('dashboard').hidden=true;$('error').textContent=data?.message||'You were removed by the Game Master.';});
-socket.on('state',s=>{state=s;$('status').textContent=s.phase.toUpperCase();$('login').hidden=!!s.me;$('dashboard').hidden=!s.me;if(s.me)render(s);});
+window.BattleAudio.init();
+socket.on('state',s=>{state=s;window.BattleAudio.observe(s.events);$('status').textContent=s.phase.toUpperCase();$('login').hidden=!!s.me;$('dashboard').hidden=!s.me;if(s.me)render(s);});
 // Use distinct bow, hull and stern shapes for ships in either orientation.
 function shipSegment(cells,cell){
  const [r,c]=cell.split(',').map(Number);
