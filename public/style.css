@@ -342,3 +342,10 @@ body.command-ui .radar .radar-sweep::after{
 @media(prefers-reduced-motion:reduce){
  body.command-ui .radar .radar-sweep{animation:none!important;transform:rotate(45deg)}
 }
+
+/* Independent hit/miss sound effects: prominent but compact and accessible. */
+.battle-audio-row,.gm-audio-tools{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:9px}
+.battle-audio-row #battle-sound,.gm-audio-tools #battle-sound{background:#16495a;border:1px solid #4399aa;color:#ddffff;border-radius:6px;padding:7px 10px;font:800 10px monospace;letter-spacing:.4px;cursor:pointer}
+.battle-audio-row #battle-sound[aria-pressed="false"],.gm-audio-tools #battle-sound[aria-pressed="false"]{background:#273849;border-color:#526476;color:#a7b4c4}
+#battle-sound-status{font:9px monospace;color:#87b5c1;letter-spacing:.35px}
+.gm-audio-tools{margin:0 0 11px;padding:9px 13px;background:#0d2b3b;border:1px solid #2b536a;border-radius:8px}
