@@ -150,7 +150,7 @@ async function run(){
  assert(lockTarget,'Missing Blue lock target');
  assert(!(await ack(blue[0],'target:lock','99,99')).ok,'Out-of-bounds target lock accepted');
  assert(!(await ack(host,'target:lock',lockTarget)).ok,'Non-player allowed to lock');
- assert(/^\\d,\\d$/.test(lockTarget),'Lock regression requires standard 10x10 square coordinate');
+ assert(/^\d,\d$/.test(lockTarget),'Lock regression requires standard 10x10 square coordinate');
  assert(!(await ack(blue[0],'target:lock','00,0')).ok,'Malformed leading-zero square accepted');
  const firstLock=await ok(blue[0],'target:lock',lockTarget);
  assert(firstLock.locked===true,'Lock action did not lock target');
