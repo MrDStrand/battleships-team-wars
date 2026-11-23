@@ -83,14 +83,26 @@ async function verify(){
  const expiringCode=(await ok(disposableHost,'host:create-room',KEY)).roomCode;
  const disposablePlayer=await getSocket();
  const expiredToken=(await ok(disposablePlayer,'player:join',{name:'Expire Me',room:expiringCode})).token;
- disposableHost.disconnect();disposablePlayer.disconnect();
+ const disposablePlayer2=await getSocket();
+ const expiredToken2=(await ok(disposablePlayer2,'player:join',{name:'Expire Me Too',room:expiringCode})).token;
+ disposableHost.disconnect();disposablePlayer.disconnect();disposablePlayer2.disconnect();
  await sleep(IDLE_MS+500);
  const probe=await getSocket();
  assert.equal((await send(probe,'player:resume',expiredToken)).ok,false,'Expired player token remained valid');
+ assert.equal((await send(probe,'player:resume',expiredToken2)).ok,false,'Second expired player token remained valid');
  assert.equal((await send(probe,'host:auth',{key:KEY,room:expiringCode})).ok,false,'Expired room remained accessible to host');
  assert.equal((await send(probe,'player:join',{name:'Too Late',room:expiringCode})).ok,false,'Expired room accepted new player');
  await ok(probe,'host:auth',{key:KEY,room:code2});
  console.log('PASS idle cleanup deletes room, rejects stale token and leaves another room untouched');
+
+ // Host-only rooms expire too: no player ever joined.
+ const emptyHost=await getSocket();
+ const emptyCode=(await ok(emptyHost,'host:create-room',KEY)).roomCode;
+ emptyHost.disconnect();
+ await sleep(IDLE_MS+500);
+ const emptyProbe=await getSocket();
+ assert.equal((await send(emptyProbe,'host:auth',{key:KEY,room:emptyCode})).ok,false,'Host-only empty room was not cleaned up');
+ console.log('PASS unused host-created room also expires after final disconnect');
 
  // Repeat leave/rejoin with host only, proving host reconnect cancels expiry.
  secondObserver.disconnect();onlyHost.disconnect();
