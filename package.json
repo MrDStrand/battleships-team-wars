@@ -6,7 +6,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node --check public/app.js && node --check public/host.js && node --check public/battle-audio.js && node --check tests/live-game.js && node --check tests/browser-lock.js"
+    "check": "node --check server.js && node --check public/app.js && node --check public/host.js && node --check public/battle-audio.js && node --check tests/live-game.js && node --check tests/browser-lock.js && node --check tests/room-cleanup.js"
   },
   "engines": {
     "node": ">=18"
