@@ -349,3 +349,20 @@ body.command-ui .radar .radar-sweep::after{
 .battle-audio-row #battle-sound[aria-pressed="false"],.gm-audio-tools #battle-sound[aria-pressed="false"]{background:#273849;border-color:#526476;color:#a7b4c4}
 #battle-sound-status{font:9px monospace;color:#87b5c1;letter-spacing:.35px}
 .gm-audio-tools{margin:0 0 11px;padding:9px 13px;background:#0d2b3b;border:1px solid #2b536a;border-radius:8px}
+
+/* Independent match rooms and invitation controls. */
+#join .room-field-label{display:block;margin-bottom:3px;color:#57d9d1;font:900 11px monospace;letter-spacing:1.4px}
+#join #room-code{display:block;width:100%;letter-spacing:3px;text-transform:uppercase;font-family:monospace;font-weight:900;font-size:20px;text-align:center;border-color:#2b9f9c;margin-bottom:10px}
+#join #name{width:100%;margin-bottom:10px}
+#join button{width:100%}
+.room-helper{font-size:12px;line-height:1.5;color:#98bec7}
+#player-room-label{color:#b0ffdb;white-space:nowrap}
+.room-reopen{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px;padding-top:14px;border-top:1px solid #31556c}
+.room-reopen input{flex:1;min-width:140px;font-family:monospace;font-size:14px;letter-spacing:2px;text-transform:uppercase}
+.room-reopen button{background:#285773}
+.gm-room-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:linear-gradient(100deg,#0a4651,#0b2b41);border:1px solid #4abaaf;border-radius:10px;padding:13px 17px;margin-bottom:12px}
+.gm-room-bar strong{display:block;font:900 26px monospace;letter-spacing:5px;color:#e0fffa}
+.room-share-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.room-share-actions button{background:#145f70;border:1px solid #4bafbf;color:#e7f9ff;font-size:12px}
+#room-share-status{font-size:11px;color:#8bfcce}
+@media(max-width:580px){.gm-room-bar strong{font-size:22px}.room-share-actions button{padding:9px 11px}}
