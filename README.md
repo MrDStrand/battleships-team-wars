@@ -90,3 +90,15 @@ Game Masters can run independent matches on the same Node/Socket.IO deployment.
 **Deployment limitation:** Rooms live in Node.js memory, so a Render restart/redeploy clears all active rooms. The implementation expects **one running Node instance**: for multiple Render instances, add an external shared state store and Socket.IO adapter before scaling horizontally. There is no permanent room storage or cross-instance synchronization yet. Avoid deploying while matches are in progress. Room codes are invitation identifiers, not passwords; only the private `HOST_KEY` grants Game Master access.
 
 Automated multiplayer tests now create two independent rooms, run both battles simultaneously, and check that shots, event logs, resets, player access and administrator actions do not cross rooms. Chromium tests cover host room creation/reopening and player invitation URL entry.
+
+## Automatic cleanup of abandoned game rooms
+
+A game room is automatically deleted **60 minutes after the last connected player and Game Master disconnects**. As long as at least one participant (player or authenticated Game Master) is connected, the room remains active regardless of game duration or voting inactivity.
+
+- Disconnecting the final participant starts one idle countdown. Additional disconnect notifications do not extend it.
+- A player resuming with a valid token, or a Game Master reopening the room with the `HOST_KEY`, immediately cancels the pending expiry. The room and all match progress stay intact.
+- If nobody reconnects during the countdown, the server cancels its game timer, deletes the room and its roster/battle state, and removes **every player token for that room** from the server's reconnect-token map. Old codes and tokens can no longer reopen it.
+- The default is 60 minutes. The optional Render environment variable `ROOM_IDLE_MINUTES` can override the duration; leave it unset for the recommended default. A short fractional duration is used **only by the isolated automated test**.
+- Rooms are still stored only in one Node process's memory: a Render restart clears them immediately, regardless of the idle timeout.
+
+The isolated test `tests/room-cleanup.js` runs a second temporary local server with a shortened timeout and verifies expiration, complete token invalidation, reconnect cancellation, and independence from other occupied rooms. It is part of the GitHub Actions multiplayer workflow.
