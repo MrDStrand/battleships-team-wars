@@ -19,8 +19,8 @@ function createGame(code){
  let idleTimer=null;
  function hasConnections(){
   // Use live sockets, not merely retained player IDs or stale socket references.
-  for(const sid of g.hosts)if(io.sockets.sockets.has(sid))return true;
-  for(const p of g.players.values())if(p.sid&&io.sockets.sockets.has(p.sid))return true;
+  for(const sid of g.hosts)if(io.sockets.sockets.get(sid)?.connected)return true;
+  for(const p of g.players.values())if(p.sid&&io.sockets.sockets.get(p.sid)?.connected)return true;
   return false;
  }
  function cancelIdle(){
