@@ -40,15 +40,15 @@ async function run(){
  assert(!(await ack(secondBlue,'player:join',{name:'A Room Hijack',room:roomCode})).ok,'Player joined a second room from same socket');
  assert(!(await ack(secondHost,'host:kick','bogus')).ok,'Cross-room kick was accepted');
  await ok(secondHost,'host:start',null);
- await wait(()=>secondHost.state?.phase==='battle','Room B begins battle');
+ await wait(()=>secondHost.state?.phase==='battle'&&secondBlue.state?.board?.options?.length,'Room B begins battle and clients get options');
  assert(host.state.phase==='lobby','Room B start affected Room A lobby');
  const roomBTarget=secondBlue.state.board.options[0];
  await ok(secondBlue,'vote',roomBTarget);
  await wait(()=>secondHost.state?.events?.length===1,'Room B shot recorded');
  assert((host.state.events||[]).length===0,'Room B events leaked into Room A');
  assert(!host.state.teams.Blue.players.some(p=>p.name==='TestBlue1'),'Room B player appeared in Room A roster');
- await ok(secondHost,'host:reset',null);
- assert(host.state.phase==='lobby','Room B reset affected Room A');
+ assert(secondHost.state.phase==='battle','Room B unexpectedly stopped while Room A was in lobby');
+ assert(host.state.phase==='lobby','Room B start affected Room A');
  assert(!(await ack(secondHost,'host:kick','not-in-B')).ok,'Room B host could kick player outside its room');
  const roomC=await connect('Unassigned User');
  assert(!(await ack(roomC,'player:join',{name:'Wrong room',room:'AAAAAA'})).ok,'Nonexistent room was accepted');
@@ -132,6 +132,7 @@ async function run(){
    pass(team+' random fleet is legal (5 ships)');
  }
  assert(host.state.turn==='Blue','Blue must attack first');pass('Automatic battle start and Blue first');
+ assert(secondHost.state.phase==='battle'&&secondHost.state.admin.Blue.shots.length===1,'Starting Room A altered Room B');pass('Both rooms can run active battles simultaneously');
  assert(!blue[0].state.board.ships.some(x=>!x.cells?.length),'Blue should see its own ships');
  assert(!blue[0].state.board.enemyShips,'Enemy ship data leaked');pass('Own ships visible and enemy ships hidden');
  assert(!blue[0].state.admin&&!red[0].state.admin,'Player received GM-only data');
@@ -177,7 +178,8 @@ async function run(){
  const blueCells=new Set(host.state.admin.Blue.ships.flatMap(s=>s.cells));
  await wait(()=>blue[0].state?.turn==='Blue'&&blue[0].state?.phase==='battle','Blue turn');
  let miss=option('Blue',c=>!redCells.has(c));assert(miss,'No legal Blue miss target');await fire(blue,'Blue',miss);
- await wait(()=>blue[0].state.board.attacks.includes(miss),'Blue miss state');assert(!blue[0].state.board.hitCells.includes(miss),'Miss reported as hit');await wait(()=>red[0].state.board.latestIncoming===miss,'Red latest incoming miss');pass('Miss recorded and latest incoming marker',miss);
+ await wait(()=>blue[0].state.board.attacks.includes(miss),'Blue miss state');assert(secondHost.state.admin.Blue.shots.length===1,'Room A attack modified Room B shots');assert(secondHost.state.events.length===1,'Room A battle log leaked to Room B');assert(!blue[0].state.board.hitCells.includes(miss),'Miss reported as hit');await wait(()=>red[0].state.board.latestIncoming===miss,'Red latest incoming miss');pass('Miss recorded and latest incoming marker',miss);
+ await ok(secondHost,'host:reset',null);assert(host.state.phase==='battle','Resetting Room B interrupted Room A');pass('Reset in one room cannot change the other active game');
  await wait(()=>red[0].state?.turn==='Red'&&red[0].state?.phase==='battle','Red turn');
  let hit=option('Red',c=>blueCells.has(c));assert(hit,'No legal Red hit target');await fire(red,'Red',hit);
  await wait(()=>blue[0].state?.board?.incoming?.includes(hit),'own fleet hit');
