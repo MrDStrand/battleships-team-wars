@@ -170,7 +170,7 @@ io.on('connection',sock=>{
   const record=playerFor(sock);if(!record)return ack?.({ok:false,error:'Not a room player'});
   const {room,p}=record,g=room.g;
   if(g.phase!=='battle'&&g.phase!=='paused')return ack?.({ok:false,error:'Locks are available during battle only'});
-  if(typeof cell!=='string'||!/^\\d{1,2},\\d{1,2}$/.test(cell)||cell.split(',').some(n=>Number(n)>=SIZE||String(Number(n))!==n))return ack?.({ok:false,error:'Invalid square'});
+  if(typeof cell!=='string'||!/^\d{1,2},\d{1,2}$/.test(cell)||cell.split(',').some(n=>Number(n)>=SIZE||String(Number(n))!==n))return ack?.({ok:false,error:'Invalid square'});
   const a=g.teams[p.team],enemy=g.teams[p.team==='Blue'?'Red':'Blue'];
   if(a.shots.includes(cell)||enemy.islands.includes(cell))return ack?.({ok:false,error:'This square cannot be locked'});
   const index=a.locked.indexOf(cell);
