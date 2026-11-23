@@ -58,6 +58,7 @@ jobs:
           fi
           node tests/browser-lock.js
           node tests/live-game.js
+          node tests/room-cleanup.js
       - name: Upload JSON results
         if: always()
         uses: actions/upload-artifact@v4
