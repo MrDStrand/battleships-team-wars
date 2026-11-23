@@ -4,7 +4,7 @@ Multiplayer 10x10 Battleships with randomly generated island obstacles on each t
 
 ## Deploy
 
-Connect this repository to a Render Web Service. Build: `npm install`. Start: `npm start`. Configure a private `HOST_KEY` environment variable. Players use `/`, Game Master uses `/host.html`.
+Connect this repository to a Render Web Service. Build: `npm install`. Start: `npm start`. Configure a private `HOST_KEY` environment variable. Players use `/` with a room code (or `/` with `?room=CODE`), and the Game Master uses `/host.html` to create or reopen a room.
 
 Game state is in memory and resets on server restart. Test multiplayer gameplay before using for an event.
 
@@ -76,3 +76,17 @@ Whenever a server-confirmed attack resolves, **all connected players on both tea
 - Battle effects are **enabled by default** but browsers require a first user interaction (such as entering the game or signing in) before audio can start. A separate **BATTLE FX ON/OFF** control is available on player and Game Master screens, with the mute preference saved locally. Sonar ping remains separately opt-in.
 - Sound events are derived only from the timestamped, server-authoritative public battle-event stream. Previously recorded events are not replayed on reconnect; there is no sound on vote changes or locks, only when shots resolve.
 - Muting affects only that browser; it does not disable effects for teammates or opponents. Browser/device sound restrictions can still prevent playback.
+
+## Multiple simultaneous game rooms
+
+Game Masters can run independent matches on the same Node/Socket.IO deployment.
+
+1. Open `/host.html`, enter the server's `HOST_KEY`, and click **Create Game Room**. The server generates a unique six-character room code (using non-ambiguous letters and digits).
+2. Click **Copy Player Link** to share a pre-filled `https://your-render-url/?room=ABCDEF` invitation, or give players the code to enter at `/`. Players enter their names and join the correct room before the match starts.
+3. The Game Master starts, pauses, resumes, resets, and administers **only that room**. Multiple hosts with the key can use **Open Existing Room** with a room code to reconnect to its Game Master console.
+4. Each room has isolated Blue/Red rosters, generated fleets, islands, shots, locks, vote majorities, phases, turn state, battle history and sound-result events. Player names may repeat across different rooms. Game Master grids are still hidden by default.
+5. Player reconnect tokens resolve to their original room automatically. A socket cannot join two rooms or use a player token in another room. Authenticated Game Masters cannot play/vote; actions are scoped server-side.
+
+**Deployment limitation:** Rooms live in Node.js memory, so a Render restart/redeploy clears all active rooms. The implementation expects **one running Node instance**: for multiple Render instances, add an external shared state store and Socket.IO adapter before scaling horizontally. There is no permanent room storage or cross-instance synchronization yet. Avoid deploying while matches are in progress. Room codes are invitation identifiers, not passwords; only the private `HOST_KEY` grants Game Master access.
+
+Automated multiplayer tests now create two independent rooms, run both battles simultaneously, and check that shots, event logs, resets, player access and administrator actions do not cross rooms. Chromium tests cover host room creation/reopening and player invitation URL entry.
