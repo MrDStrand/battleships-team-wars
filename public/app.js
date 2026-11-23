@@ -1,8 +1,12 @@
 'use strict';
-const socket=io(), $=id=>document.getElementById(id);let state=null,lockMode=false,token=sessionStorage.getItem('battleships-token');
+const socket=io(), $=id=>document.getElementById(id);
+const roomFromUrl=(new URLSearchParams(location.search).get('room')||'').trim().toUpperCase();
+let state=null,lockMode=false,token=sessionStorage.getItem('battleships-token');
+$('room-code').value=roomFromUrl||sessionStorage.getItem('battleships-last-room')||'';
+
 const coord=(r,c)=>`${r},${c}`,label=(r,c)=>`${String.fromCharCode(65+c)}${10-r}`;
 function emit(event,data,cb){socket.emit(event,data,res=>{if(!res?.ok) $('error').textContent=res?.error||'Request failed';else cb?.(res);});}
-$('join').onsubmit=e=>{e.preventDefault();emit('player:join',{name:$('name').value},r=>{token=r.token;sessionStorage.setItem('battleships-token',token);$('error').textContent='';});};
+$('join').onsubmit=e=>{e.preventDefault();const room=$('room-code').value.trim().toUpperCase();emit('player:join',{name:$('name').value,room},r=>{token=r.token;sessionStorage.setItem('battleships-token',token);sessionStorage.setItem('battleships-last-room',r.roomCode);$('room-code').value=r.roomCode;$('error').textContent='';});};
 function setLockMode(next){
  lockMode=next;
  $('lock-mode').setAttribute('aria-checked',String(next));
@@ -44,7 +48,14 @@ socket.on('connect',()=>{if(token)socket.emit('player:resume',token,r=>{if(!r?.o
 socket.on('disconnect',reason=>{if(reason==='io server disconnect'&&!token)socket.connect();});
 socket.on('player:kicked',data=>{token=null;sessionStorage.removeItem('battleships-token');state=null;$('login').hidden=false;$('dashboard').hidden=true;$('error').textContent=data?.message||'You were removed by the Game Master.';});
 window.BattleAudio.init();
-socket.on('state',s=>{state=s;window.BattleAudio.observe(s.events);$('status').textContent=s.phase.toUpperCase();$('login').hidden=!!s.me;$('dashboard').hidden=!s.me;if(s.me)render(s);});
+socket.on('state',s=>{
+ if(!s.roomCode&&!s.me){$('login').hidden=false;$('dashboard').hidden=true;$('status').textContent='SELECT ROOM';return}
+ state=s;
+ window.BattleAudio.observe(s.events);
+ $('status').textContent=s.phase.toUpperCase();
+ $('login').hidden=!!s.me;$('dashboard').hidden=!s.me;
+ if(s.me){$('player-room-label').textContent='// ROOM '+s.roomCode;sessionStorage.setItem('battleships-last-room',s.roomCode);render(s)}
+});
 // Use distinct bow, hull and stern shapes for ships in either orientation.
 function shipSegment(cells,cell){
  const [r,c]=cell.split(',').map(Number);
