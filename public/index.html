@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#061421">
 <title>Battleships — Naval Command</title>
-<link rel="stylesheet" href="/style.css?v=20261120-battleaudio1">
+<link rel="stylesheet" href="/style.css?v=20261123-rooms1">
 </head>
 <body class="command-ui">
 <header class="command-header">
@@ -15,12 +15,12 @@
 <section id="login" class="panel login-panel">
   <div class="overline">COMMAND LINK // ACCESS TERMINAL</div><h1>Report for duty.</h1>
   <p>Two fleets. One ocean. Every strike decided by your crew.</p>
-  <form id="join"><input id="name" maxlength="24" placeholder="Your callsign" autocomplete="nickname" required><button>ENTER COMMAND</button></form>
+  <form id="join"><label class="room-field-label" for="room-code">GAME ROOM CODE</label><input id="room-code" maxlength="6" minlength="6" pattern="[A-Za-z2-9]{6}" placeholder="6-character room code" autocomplete="off" autocapitalize="characters" spellcheck="false" required><input id="name" maxlength="24" placeholder="Your callsign" autocomplete="nickname" required><button>JOIN ROOM</button></form><p class="room-helper">Ask your Game Master for the six-character room code or use their invitation link.</p>
   <p id="error" role="alert"></p>
 </section>
 <section id="dashboard" hidden>
   <div class="command-heading">
-    <div class="captain-id"><span class="overline">TACTICAL OPERATIONS</span><h2 id="identity"></h2></div>
+    <div class="captain-id"><span class="overline">TACTICAL OPERATIONS <span id="player-room-label"></span></span><h2 id="identity"></h2></div>
     <strong id="turn" class="turn-banner" role="status" aria-live="polite"></strong>
     <div class="op-status"><span class="live-dot"></span> FLEET LINK ACTIVE <span id="timer"></span></div>
   </div>
@@ -57,5 +57,5 @@
 </section>
 <div id="endgame" class="endgame" hidden role="dialog" aria-modal="true" aria-labelledby="endgame-title"><div id="endgame-effects" class="endgame-effects" aria-hidden="true"></div><div class="endgame-card"><div id="endgame-emblem" class="endgame-emblem"></div><h1 id="endgame-title"></h1><p id="endgame-subtitle"></p><button type="button" id="endgame-close">View battlefield</button></div></div>
 </main>
-<script src="/socket.io/socket.io.js"></script><script src="/battle-audio.js?v=20261120-battleaudio1"></script><script src="/app.js?v=20261120-battleaudio1"></script>
+<script src="/socket.io/socket.io.js"></script><script src="/battle-audio.js?v=20261123-rooms1"></script><script src="/app.js?v=20261123-rooms1"></script>
 </body></html>
