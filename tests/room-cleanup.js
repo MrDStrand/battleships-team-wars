@@ -53,8 +53,9 @@ async function verify(){
  await ok(returningPlayer,'player:resume',token);
  await sleep(IDLE_MS+350);
  const reopenedHost=await getSocket();
+ const rosterReady=new Promise(resolve=>reopenedHost.on('state',s=>{if(s.host)resolve(s.teams.Blue.players)}));
  await ok(reopenedHost,'host:auth',{key:KEY,room:code});
- const roster=await new Promise(resolve=>reopenedHost.on('state',s=>{if(s.host)resolve(s.teams.Blue.players)}));
+ const roster=await rosterReady;
  assert(roster.some(p=>p.name==='Reconnect Test'),'Reconnect did not preserve the player');
  console.log('PASS reconnect cancels the entire idle countdown and preserves room/player token');
 
