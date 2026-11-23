@@ -22,17 +22,20 @@ async function main(){
   host=io(URL,{reconnection:false,transports:['websocket']});
   host.on('state',value=>{hostState=value});
   await new Promise((resolve,reject)=>{host.once('connect',resolve);host.once('connect_error',reject)});
-  await ack(host,'host:auth',secret);
+  const roomCode=(await ack(host,'host:create-room',secret)).roomCode;
   await ack(host,'host:reset',null);
   await ack(host,'host:remove-all',null);
   browser=await chromium.launch({headless:true});
   const ctx=await browser.newContext({viewport:{width:1440,height:900}});
   // Game Master is an observer: fleet grids are hidden by default and may be revealed.
   const gmPage=await ctx.newPage();pages.push(gmPage);
-  await gmPage.goto(URL+'/host.html',{waitUntil:'domcontentloaded'});
+  await gmPage.goto(URL+'/host.html?room='+roomCode,{waitUntil:'domcontentloaded'});
   await gmPage.locator('#key').fill(secret);
-  await gmPage.locator('#auth button').click();
+  await gmPage.locator('#open-room').click();
   await gmPage.locator('#dashboard').waitFor({state:'visible',timeout:8000});
+  assert.equal(await gmPage.locator('#gm-room-code').innerText(),roomCode,'GM room code mismatch');
+  assert.equal(await gmPage.locator('#copy-room-link').isVisible(),true,'Room invite link control missing');
+
   assert.equal(await gmPage.locator('#host-team-grids').isVisible(),false,'GM ship grids should start hidden');
   assert.equal(await gmPage.locator('#start').isVisible(),true,'Start control should remain visible');
   assert.equal(await gmPage.locator('#pause').isVisible(),true,'Pause control should remain visible');
@@ -53,9 +56,9 @@ async function main(){
   console.log('PASS Chromium: GM toggles private fleet grids while start/stop and roster tools remain visible');
   for(const name of ['BrowserBlue1','BrowserRed1','BrowserBlue2','BrowserRed2']){
    const p=await ctx.newPage();pages.push(p);
-   await p.goto(URL,{waitUntil:'domcontentloaded'});
+   await p.goto(URL+'/?room='+roomCode,{waitUntil:'domcontentloaded'});
    await p.locator('#name').fill(name);
-   await p.getByRole('button',{name:'Join game'}).click();
+   await p.getByRole('button',{name:'JOIN ROOM'}).click();
    await p.locator('#dashboard').waitFor({state:'visible',timeout:8000});
   }
   // Radar must visibly rotate after joining, even before the Game Master starts battle.
