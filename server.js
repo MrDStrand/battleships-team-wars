@@ -7,11 +7,40 @@ const FLEET=[['Carrier',5],['Battleship',4],['Cruiser',3],['Submarine',3],['Dest
 const fresh=()=>({ships:[],shots:[],islands:[],votes:{},eligible:[],locked:[],index:0});
 
 const rooms=new Map(),tokens=new Map();
+// In-memory room expiry. Default: 60 minutes after the final host/player disconnect.
+// An override is useful in test runs; production should normally use the default.
+const idleSetting=Number(process.env.ROOM_IDLE_MINUTES??60);
+const ROOM_IDLE_MS=Number.isFinite(idleSetting)&&idleSetting>0?Math.round(idleSetting*60000):3600000;
 const cleanCode=value=>typeof value==='string'?value.trim().toUpperCase():'';
 const validCode=code=>/^[A-HJ-NP-Z2-9]{6}$/.test(code);
 const newCode=()=>{const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let code;do{code=Array.from({length:6},()=>chars[crypto.randomInt(chars.length)]).join('')}while(rooms.has(code));return code};
 function createGame(code){
  let g={phase:'lobby',teams:{Blue:fresh(),Red:fresh()},players:new Map(),hosts:new Set(),turn:'Blue',winner:null,deadline:null,clock:null,history:[],events:[]};
+ let idleTimer=null;
+ function hasConnections(){
+  // Use live sockets, not merely retained player IDs or stale socket references.
+  for(const sid of g.hosts)if(io.sockets.sockets.has(sid))return true;
+  for(const p of g.players.values())if(p.sid&&io.sockets.sockets.has(p.sid))return true;
+  return false;
+ }
+ function cancelIdle(){
+  if(idleTimer!==null){clearTimeout(idleTimer);idleTimer=null}
+ }
+ function expire(){
+  idleTimer=null;
+  if(rooms.get(code)!==api||hasConnections())return;
+  clear(); // Cancel any game clock before dropping its state.
+  for(const p of g.players.values())tokens.delete(p.id);
+  g.players.clear();g.hosts.clear();g.events=[];g.history=[];
+  g.teams={Blue:fresh(),Red:fresh()};
+  rooms.delete(code);
+ }
+ function scheduleIdle(){
+  if(rooms.get(code)!==api||hasConnections()){cancelIdle();return}
+  if(idleTimer!==null)return; // Repeated disconnects must not extend expiration.
+  idleTimer=setTimeout(expire,ROOM_IDLE_MS);
+  idleTimer.unref?.(); // An empty room should not keep an otherwise idle Node process alive.
+ }
  const other=t=>t==='Blue'?'Red':'Blue',members=t=>[...g.players.values()].filter(p=>p.team===t),active=t=>members(t).filter(p=>p.sid),need=t=>Math.floor(g.teams[t].eligible.length/2)+1;
 const cells=(start,dir,n)=>{let [r,c]=start.split(',').map(Number),[dr,dc]=({up:[-1,0],down:[1,0],left:[0,-1],right:[0,1]})[dir]||[99,99],out=[];for(let i=0;i<n;i++){let y=r+i*dr,x=c+i*dc;if(y<0||x<0||y>=SIZE||x>=SIZE)return null;out.push(y+','+x)}return out};
 const placed=t=>g.teams[t].ships.flatMap(s=>s.cells);
@@ -51,6 +80,7 @@ function resolve(t){if(g.phase!=='battle'||g.turn!==t)return;let win=Object.entr
  function assignSocket(sock,p){
   if(p.sid&&p.sid!==sock.id)io.sockets.sockets.get(p.sid)?.disconnect(true);
   p.sid=sock.id;
+  cancelIdle();
   if(g.phase==='battle'&&g.turn===p.team)syncEligible(p.team);
  }
  function removePlayer(p){
@@ -73,8 +103,10 @@ function resolve(t){if(g.phase!=='battle'||g.turn!==t)return;let win=Object.entr
   for(const p of g.players.values())if(p.sid===sock.id){p.sid=null;changed.add(p.team)}
   for(const t of changed){syncEligible(t);if(g.phase==='battle'&&g.turn===t)resolve(t)}
   send();
+  scheduleIdle();
  }
- return {code,g,send,view,assignSocket,removePlayer,onDisconnect,buildFleet,reset,resolve,opts,active,syncEligible,clear,timer,log};
+ const api={code,g,send,view,assignSocket,removePlayer,onDisconnect,buildFleet,reset,resolve,opts,active,syncEligible,clear,timer,log,cancelIdle,scheduleIdle};
+ return api;
 }
 const matchFor=sock=>rooms.get(sock.data.room)||null;
 const authorizedHost=sock=>{const room=matchFor(sock);return room&&room.g.hosts.has(sock.id)?room:null};
@@ -90,7 +122,7 @@ io.on('connection',sock=>{
   if(typeof key!=='string'||!crypto.timingSafeEqual(crypto.createHash('sha256').update(key).digest(),crypto.createHash('sha256').update(KEY).digest()))return ack?.({ok:false,error:'Invalid host key'});
   if(sock.data.room)return ack?.({ok:false,error:'Already connected to a room'});
   const code=newCode(),room=createGame(code);rooms.set(code,room);
-  enter(sock,room,'host');room.g.hosts.add(sock.id);
+  enter(sock,room,'host');room.g.hosts.add(sock.id);room.cancelIdle();
   ack?.({ok:true,roomCode:code});room.send();
  });
  sock.on('host:auth',(input,ack)=>{
@@ -99,7 +131,7 @@ io.on('connection',sock=>{
   const room=rooms.get(code);
   if(!room)return ack?.({ok:false,error:'Room not found. Create a new room or check its code.'});
   if(!enter(sock,room,'host'))return ack?.({ok:false,error:'Already connected to another room'});
-  room.g.hosts.add(sock.id);ack?.({ok:true,roomCode:code});room.send();
+  room.g.hosts.add(sock.id);room.cancelIdle();ack?.({ok:true,roomCode:code});room.send();
  });
  sock.on('player:resume',(token,ack)=>{
   if(sock.data.role==='host')return ack?.({ok:false,error:'Game Master is observer-only'});
@@ -125,7 +157,7 @@ io.on('connection',sock=>{
   const team=room.g.teams.Blue&&[...room.g.players.values()].filter(p=>p.team==='Blue').length<=[...room.g.players.values()].filter(p=>p.team==='Red').length?'Blue':'Red';
   const p={id:crypto.randomBytes(16).toString('hex'),name,team,sid:sock.id};
   if(!enter(sock,room,'player'))return ack?.({ok:false,error:'Cannot join this room'});
-  room.g.players.set(p.id,p);tokens.set(p.id,code);
+  room.g.players.set(p.id,p);tokens.set(p.id,code);room.cancelIdle();
   ack?.({ok:true,token:p.id,roomCode:code});room.send();
  });
  sock.on('vote',(choice,ack)=>{
